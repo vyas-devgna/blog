@@ -8,14 +8,15 @@
 
 ## Deploy
 
-`pnpm deploy` builds then deploys the Worker. Wrangler is configured for the `blog.vyasdevgna.online` custom domain and public Neon Auth base URL. Deployment creates DNS and certificate records for that hostname. CI currently validates builds only and does not deploy.
+`pnpm deploy` builds then deploys the Worker. The Worker is deployed to the `blog.vyasdevgna.online` custom domain. Wrangler config supplies the public Neon Auth base URL, and the pooled `DATABASE_URL` is stored as an encrypted Worker secret. CI currently validates builds only and does not deploy.
 
 ## Pre-release checklist
 
 - Provision a Cloudflare Worker by deploying the validated build.
-- Set `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DATABASE_URL`, `RESEND_API_KEY`, and `TURNSTILE_SECRET_KEY` only after their features/services are implemented.
+- Neon sign-ups are disabled until a verified transactional email sender is configured. The DB URL is provisioned, but no schema or database client is active yet.
+- Configure `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY` only after the corresponding app flows are implemented; configure Cloudflare Web Analytics when its snippet can be integrated.
 - Configure Neon migration credentials and run migrations against the intended environment.
 - Verify email, Turnstile, OAuth redirects (if enabled), analytics, backups, and production smoke tests.
 - Tag and publish a release only after full V1 checks are operational.
 
-Production release remains blocked by the unfinished application backend and community features, missing Resend/Turnstile setup, and absent production smoke and backup restore checks.
+Production release remains blocked by the unfinished application backend and community features, missing Resend/Turnstile setup, and absent backup restore checks. The static deployment's root, blog index, discussions page, robots, sitemap, and RSS endpoints returned HTTP 200 after deployment.

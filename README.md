@@ -4,7 +4,7 @@ An Astro publication for `blog.vyasdevgna.online`. Public writing is authored in
 
 ## Current state
 
-The public publication foundation and provider resources are prepared. Neon project `blog` exists in Singapore, and Neon Managed Auth is enabled on its `main` branch. Wrangler is authenticated for this account, and `blog.vyasdevgna.online` is configured as the Worker custom domain. The site is not deployed, and the application does not yet use the database or auth endpoint. Community features, Resend, Turnstile, and analytics still need application/service configuration.
+The static publication foundation is deployed at `https://blog.vyasdevgna.online`. Neon project `blog` exists in Singapore, and Neon Managed Auth is enabled on its `main` branch with the production origin trusted. The Worker has the pooled `DATABASE_URL` secret and public auth endpoint configured, but no application database client, schema, or auth flow uses them yet. Sign-ups are disabled until a transactional email sender is configured. Community features, Resend, Turnstile, and analytics still need setup.
 
 ## Local development
 
@@ -26,7 +26,7 @@ Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`
 
 - Astro 7 with TypeScript and MDX
 - Cloudflare Workers with Static Assets; public article pages are prerendered
-- Neon PostgreSQL and Managed Better Auth are provisioned; no schema or live database client is active yet
+- Neon PostgreSQL and Managed Better Auth are provisioned; the Worker secret and public auth URL are configured, but no schema or live database client is active yet
 - Cloudflare Analytics, Turnstile, and Resend are not configured
 
 ## Provider CLI authentication
