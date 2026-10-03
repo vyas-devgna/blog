@@ -6,7 +6,7 @@
 - Validate: `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm build`
 - Preview the build: `pnpm preview`
 - Deploy after account/domain setup: `pnpm deploy`
-- Worker logs: `pnpm exec wrangler tail vyas-publication`
+- Worker logs: `pnpm exec wrangler tail blog`
 
 ## Rollback and incidents
 

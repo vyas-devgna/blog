@@ -4,7 +4,7 @@ An Astro publication for `blog.vyasdevgna.online`. Public writing is authored in
 
 ## Current state
 
-The public publication foundation is implemented. Account and community features are not operational yet; they require a Neon project, Cloudflare account access, and transactional email/bot-protection setup. This repository does not claim a production deployment.
+The public publication foundation and provider resources are prepared. Neon project `blog` exists in Singapore, and Neon Managed Auth is enabled on its `main` branch. Wrangler is authenticated for this account, and `blog.vyasdevgna.online` is configured as the Worker custom domain. The site is not deployed, and the application does not yet use the database or auth endpoint. Community features, Resend, Turnstile, and analytics still need application/service configuration.
 
 ## Local development
 
@@ -26,18 +26,18 @@ Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`
 
 - Astro 7 with TypeScript and MDX
 - Cloudflare Workers with Static Assets; public article pages are prerendered
-- Neon PostgreSQL and Drizzle dependencies are present, but no schema or live database client is active yet
-- Cloudflare Analytics, Turnstile, Resend, and Better Auth are not configured
+- Neon PostgreSQL and Managed Better Auth are provisioned; no schema or live database client is active yet
+- Cloudflare Analytics, Turnstile, and Resend are not configured
 
 ## Provider CLI authentication
 
 The project includes Wrangler and the Neon CLI. Sign in locally with:
 
 ```sh
-pnpm exec wrangler login --scopes user:read workers:write zone:read --use-keyring
-pnpm exec neon auth
+pnpm exec wrangler whoami
+pnpm exec neon me --profile blog-setup
 ```
 
-These commands open provider sign-in/authorization flows and store credentials in the local keyring/profile. Do not paste tokens into source files, issues, or chat. The required Cloudflare and Neon account sign-ins are not complete in this environment yet.
+Wrangler credentials are in the OS keyring. The Neon CLI profile `blog-setup` is in the OS keyring and is restricted to the blog project. Do not paste tokens into source files, issues, or chat. The local `.neon` project link is ignored by Git; database credentials were not pulled into `.env`.
 
 See [architecture](docs/ARCHITECTURE.md), [deployment](docs/DEPLOYMENT.md), [backup and restore](docs/BACKUPS.md), [SEO](docs/SEO.md), [moderation](docs/MODERATION.md), and [operations](docs/OPERATIONS.md).
