@@ -1,0 +1,24 @@
+---
+import { getCollection, render } from 'astro:content';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { topicSlug } from '../../lib/topics';
+
+export const prerender = true;
+export async function getStaticPaths() {
+	return (await getCollection('blog', ({ data }) => !data.draft)).map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const canonical = post.data.canonical ?? new URL(`/blog/${post.id}/`, Astro.site).toString();
+---
+
+<SiteLayout title={post.data.title} description={post.data.description} canonical={canonical}>
+	<article class="article" itemscope itemtype="https://schema.org/BlogPosting">
+		<p class="article-meta"><time itemprop="datePublished" datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en', { dateStyle: 'long' })}</time><span aria-hidden="true">·</span><span>Vyas</span></p>
+		<h1 itemprop="headline">{post.data.title}</h1>
+		<p class="article-description" itemprop="description">{post.data.description}</p>
+		{post.data.tags.length > 0 && <ul class="tag-list" aria-label="Topics">{post.data.tags.map((tag) => <li><a href={`/topics/${topicSlug(tag)}/`}>{tag}</a></li>)}</ul>}
+		<div class="article-body" itemprop="articleBody"><Content /></div>
+		{post.data.updatedAt && <meta itemprop="dateModified" content={post.data.updatedAt.toISOString()} />}
+	</article>
+</SiteLayout>

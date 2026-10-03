@@ -1,0 +1,15 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getPublishedPosts } from '../../lib/posts';
+
+export const prerender = true;
+const posts = await getPublishedPosts();
+---
+
+<SiteLayout title="Writing" description="Essays and field notes on software, research, and systems.">
+	<section class="page-shell">
+		<header class="page-heading"><p class="eyebrow">The archive</p><h1 class="page-title">Writing</h1><p class="page-intro">Essays and field notes on software, research, and systems.</p></header>
+		{posts.length ? <div class="article-list">{posts.map((post) => <ArticleCard post={post} />)}</div> : <p class="empty-note">No articles are published yet. The sample in <code>src/content/blog/</code> stays out of the public site until its draft flag is removed.</p>}
+	</section>
+</SiteLayout>

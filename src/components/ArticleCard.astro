@@ -1,0 +1,14 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { topicSlug } from '../lib/topics';
+
+interface Props { post: CollectionEntry<'blog'> }
+const { post } = Astro.props;
+---
+
+<article class="article-card">
+	<div class="article-meta"><time datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en', { dateStyle: 'medium' })}</time><span aria-hidden="true">·</span><span>{post.data.tags.slice(0, 2).join(' / ') || 'Notes'}</span></div>
+	<h2><a href={`/blog/${post.id}/`}>{post.data.title}</a></h2>
+	<p>{post.data.description}</p>
+	{post.data.tags.length > 0 && <ul class="tag-list" aria-label="Topics">{post.data.tags.map((tag) => <li><a href={`/topics/${topicSlug(tag)}/`}>{tag}</a></li>)}</ul>}
+</article>

@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description: string;
+	canonical?: string;
+	noindex?: boolean;
+}
+const { title, description, canonical, noindex = false } = Astro.props;
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
+		<meta name="theme-color" content="#edf1f0" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} · Vyas</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalUrl} />
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Vyas" />
+		<meta property="og:title" content={`${title} · Vyas`} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta name="twitter:card" content="summary" />
+		<link rel="alternate" type="application/rss+xml" title="Vyas · RSS" href="/rss.xml" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	</head>
+	<body>
+		<a class="skip-link" href="#main">Skip to content</a>
+		<header class="site-header">
+			<a class="wordmark" href="/" aria-label="Vyas home"><span class="wordmark-mark">V</span><span>Vyas</span></a>
+			<nav aria-label="Main navigation">
+				<a href="/blog/">Writing</a>
+				<a href="/projects/">Projects</a>
+				<a href="/about/">About</a>
+				<a class="nav-community" href="/discussions/">Community <span aria-hidden="true">↗</span></a>
+			</nav>
+		</header>
+		<main id="main"><slot /></main>
+		<footer class="site-footer">
+			<a class="wordmark" href="/"><span class="wordmark-mark">V</span><span>Vyas</span></a>
+			<p>Independent notes on software, research, and the things worth understanding.</p>
+			<div class="footer-links"><a href="/rss.xml">RSS</a><a href="/about/">About</a><a href="/search/">Search</a></div>
+			<small>© {new Date().getFullYear()} Vyas. Built for the open web.</small>
+		</footer>
+	</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "vyas-publication",
+  "type": "module",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "lint": "prettier --check .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:check": "drizzle-kit check",
+    "deploy": "pnpm build && wrangler deploy",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
+    "@astrojs/mdx": "^8.0.2",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "@neondatabase/auth": "0.5.0-beta",
+    "@neondatabase/serverless": "^1.2.0",
+    "astro": "^7.3.5",
+    "drizzle-orm": "^0.45.3"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "workerd": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "drizzle-kit": "^0.31.11",
+    "neon": "8.0.4",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.147.0"
+  },
+  "packageManager": "pnpm@12.6.0"
+}

@@ -1,0 +1,6 @@
+allowBuilds:
+  core-js: true
+  esbuild: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - neon@8.0.4

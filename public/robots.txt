@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://blog.vyasdevgna.online/sitemap-index.xml

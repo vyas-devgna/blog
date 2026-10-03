@@ -1,0 +1,24 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { getPublishedPosts } from '../lib/posts';
+
+export const prerender = true;
+const posts = (await getPublishedPosts()).slice(0, 4);
+---
+
+<SiteLayout title="Notes on software and systems" description="Independent notes on software, research, and the things worth understanding.">
+	<section class="home-hero">
+		<div>
+			<p class="eyebrow">An independent publication</p>
+			<h1>Notes on systems,<br />software &amp; research.</h1>
+			<p class="hero-copy">A place to follow an idea from its first question to the details that make it work.</p>
+			<div class="hero-actions"><a class="button-link" href="/blog/">Explore the writing <span aria-hidden="true">↗</span></a><a class="text-link" href="/about/">A little about this place</a></div>
+		</div>
+		<aside class="hero-note"><strong>Made for the long read.</strong>Plain pages, durable links, and open access. No account needed to read.</aside>
+	</section>
+	<section class="page-shell" aria-labelledby="latest-heading">
+		<div class="section-head"><h2 id="latest-heading">Recent writing</h2><a href="/blog/">All articles <span aria-hidden="true">→</span></a></div>
+		{posts.length ? <div class="article-list">{posts.map((post) => <ArticleCard post={post} />)}</div> : <p class="empty-note">The first articles are being prepared. Subscribe to the <a href="/rss.xml">RSS feed</a> to follow along.</p>}
+	</section>
+</SiteLayout>
