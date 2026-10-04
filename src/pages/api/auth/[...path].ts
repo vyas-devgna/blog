@@ -1,4 +1,6 @@
 import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
+import { safeReturnTo } from "../../../lib/auth-navigation";
 import { getDb } from "../../../lib/server/db";
 import { ApiError, proxyAuthRequest } from "../../../lib/server/auth";
 import {
@@ -25,7 +27,7 @@ const allowedPaths = new Set([
   "forget-password/email-otp",
   "email-otp/reset-password",
   "change-password",
-  "delete-user",
+  "sign-in/social",
 ]);
 
 export const ALL: APIRoute = async ({ request, params }) => {
@@ -51,7 +53,30 @@ export const ALL: APIRoute = async ({ request, params }) => {
     if (request.method === "POST") body = await readJson(request, 8_000);
 
     let forwardedBody = body;
-    if (path === "sign-up/email") {
+    if (path === "sign-in/social") {
+      if (body?.provider !== "google")
+        throw new ApiError(
+          400,
+          "Choose Google to continue.",
+          "invalid_provider",
+        );
+      await enforceRateLimit(
+        getDb(),
+        "social-signin",
+        clientRateKey(request),
+        20,
+        900,
+      );
+      const callback = new URL("/auth/callback/", env.PUBLIC_SITE_URL);
+      callback.searchParams.set("returnTo", safeReturnTo(body?.returnTo));
+      forwardedBody = {
+        provider: "google",
+        disableRedirect: true,
+        callbackURL: callback.toString(),
+        newUserCallbackURL: callback.toString(),
+        errorCallbackURL: callback.toString(),
+      };
+    } else if (path === "sign-up/email") {
       requireString(body?.password, "Password", 12, 128, false);
       await enforceRateLimit(
         getDb(),
@@ -103,8 +128,6 @@ export const ALL: APIRoute = async ({ request, params }) => {
     } else {
       if (path === "change-password")
         requireString(body?.newPassword, "New password", 12, 128, false);
-      if (path === "delete-user")
-        requireString(body?.password, "Password", 8, 128, false);
     }
 
     let forwardedRequest = request;
@@ -123,6 +146,49 @@ export const ALL: APIRoute = async ({ request, params }) => {
     const headers = new Headers(response.headers);
     headers.set("cache-control", "no-store, private");
     headers.set("x-content-type-options", "nosniff");
+    headers.delete("set-auth-token");
+    headers.delete("set-auth-jwt");
+    headers.delete("content-length");
+    if (response.ok && (path === "sign-in/social" || path === "get-session"))
+      headers.delete("content-encoding");
+    if (response.ok && path === "sign-in/social") {
+      const data = await response.json();
+      const target = new URL(String(data?.url ?? ""));
+      const authOrigin = new URL(env.NEON_AUTH_BASE_URL).origin;
+      if (
+        target.protocol !== "https:" ||
+        (target.origin !== authOrigin &&
+          target.hostname !== "accounts.google.com")
+      )
+        throw new ApiError(
+          502,
+          "Google sign-in could not be started. Please retry.",
+          "invalid_oauth_redirect",
+        );
+      return new Response(JSON.stringify({ url: target.toString() }), {
+        status: 200,
+        headers,
+      });
+    }
+    if (response.ok && path === "get-session") {
+      const data = await response.json();
+      const safe =
+        data?.user && data?.session
+          ? {
+              user: {
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email,
+                emailVerified: data.user.emailVerified,
+              },
+              session: {
+                id: data.session.id,
+                expiresAt: data.session.expiresAt,
+              },
+            }
+          : null;
+      return new Response(JSON.stringify(safe), { status: 200, headers });
+    }
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

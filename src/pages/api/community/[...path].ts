@@ -1130,6 +1130,31 @@ async function dispatch(context: APIContext) {
       emailNotificationsAvailable: Boolean(env.RESEND_API_KEY),
     });
   }
+  if (method === "GET" && path.join("/") === "account/security") {
+    const auth = await getAuthContext(request);
+    const response = await proxySessionApi(request, "list-accounts");
+    if (!response.ok)
+      throw new ApiError(
+        503,
+        "Account security could not be loaded.",
+        "security_unavailable",
+      );
+    const accounts = await response.json();
+    if (!Array.isArray(accounts))
+      throw new ApiError(
+        503,
+        "Account security could not be loaded.",
+        "security_unavailable",
+      );
+    return json(
+      {
+        hasPassword: accounts.some((item) => item.providerId === "credential"),
+        googleLinked: accounts.some((item) => item.providerId === "google"),
+      },
+      200,
+      auth.cookies,
+    );
+  }
   if (method === "GET" && path[0] === "categories" && path.length === 1) {
     const items = await db
       .select({
@@ -2312,25 +2337,63 @@ async function dispatch(context: APIContext) {
     path.length === 2
   ) {
     const input = await readJson(request, 2000);
-    const password = requireString(input.password, "Password", 8, 128, false);
-    const auth = await getAuthContext(request, { allowDeleted: true });
+    const auth = await getAuthContext(request, {
+      allowBlocked: true,
+    });
+    const accountsResponse = await proxySessionApi(request, "list-accounts");
+    if (!accountsResponse.ok)
+      throw new ApiError(
+        503,
+        "Account security could not be checked.",
+        "security_unavailable",
+      );
+    const accounts = await accountsResponse.json();
+    if (!Array.isArray(accounts))
+      throw new ApiError(
+        503,
+        "Account security could not be checked.",
+        "security_unavailable",
+      );
+    const hasPassword = accounts.some(
+      (item) => item.providerId === "credential",
+    );
+    const password = hasPassword
+      ? requireString(input.password, "Password", 8, 128, false)
+      : undefined;
+    const age = Date.now() - new Date(auth.sessionCreatedAt).getTime();
+    if (!hasPassword && (!Number.isFinite(age) || age < 0 || age > 5 * 60_000))
+      throw new ApiError(
+        403,
+        "Sign out and sign in with Google again, then delete your account within five minutes.",
+        "fresh_session_required",
+      );
     const randomName = `deleted_${crypto.randomUUID().slice(0, 8)}`;
-    if (auth.profile.status !== "deleted") {
-      await db
-        .update(profiles)
-        .set({
-          status: "deleted",
-          username: randomName,
-          displayName: "Deleted member",
-          bio: null,
-          website: null,
-          emailAddress: null,
-          role: "user",
-          trustLevel: "new",
-          updatedAt: new Date(),
-        })
-        .where(eq(profiles.userId, auth.user.id));
-    }
+    const marked = await db
+      .update(profiles)
+      .set({
+        status: "deleted",
+        username: randomName,
+        displayName: "Deleted member",
+        bio: null,
+        website: null,
+        emailAddress: null,
+        role: "user",
+        trustLevel: "new",
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(profiles.userId, auth.user.id),
+          eq(profiles.status, auth.profile.status),
+        ),
+      )
+      .returning({ userId: profiles.userId });
+    if (marked.length !== 1)
+      throw new ApiError(
+        409,
+        "This account changed before deletion. Refresh and try again.",
+        "conflict",
+      );
     const headers = new Headers(request.headers);
     headers.set("content-type", "application/json");
     headers.delete("content-length");
@@ -2342,8 +2405,15 @@ async function dispatch(context: APIContext) {
         body: JSON.stringify({ password }),
       },
     );
-    const response = await proxyAuthRequest(authRequest, "delete-user");
-    if (!response.ok) {
+    const response = await proxyAuthRequest(authRequest, "delete-user").catch(
+      () => new Response(null, { status: 502 }),
+    );
+    const deletion = await response.json().catch(() => null);
+    if (
+      !response.ok ||
+      deletion?.message !== "User deleted" ||
+      deletion?.success !== true
+    ) {
       if (auth.profile.status !== "deleted") {
         await db
           .update(profiles)
@@ -2354,9 +2424,17 @@ async function dispatch(context: APIContext) {
             bio: auth.profile.bio,
             website: auth.profile.website,
             emailAddress: auth.profile.emailAddress,
+            role: auth.profile.role,
+            trustLevel: auth.profile.trustLevel,
             updatedAt: new Date(),
           })
-          .where(eq(profiles.userId, auth.user.id));
+          .where(
+            and(
+              eq(profiles.userId, auth.user.id),
+              eq(profiles.status, "deleted"),
+              eq(profiles.username, randomName),
+            ),
+          );
       }
       throw new ApiError(
         400,

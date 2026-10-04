@@ -1,0 +1,18 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+export const prerender = true;
+---
+
+<SiteLayout title="Page not found" description="This page could not be found. Explore the writing and community on Vyas." noindex>
+  <section class="page-shell not-found">
+    <p class="not-found-number" aria-hidden="true">404</p>
+    <p class="eyebrow">A wrong turn</p>
+    <h1>This page isn’t here.</h1>
+    <p>The link may have moved, or the page may no longer exist. There’s more to read from here.</p>
+    <div class="not-found-actions">
+      <a class="pill pill-solid" href="/">Back home</a>
+      <a class="pill pill-glass" href="/blog/">Explore the writing</a>
+    </div>
+    <a class="more-link" href="/search/">Search the publication <span aria-hidden="true">→</span></a>
+  </section>
+</SiteLayout>

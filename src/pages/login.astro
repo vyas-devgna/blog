@@ -1,12 +1,14 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
+import GoogleSignIn from "../components/GoogleSignIn.astro";
 export const prerender = false;
 ---
 
 <SiteLayout title="Sign in" description="Sign in to your Vyas community account." noindex>
   <section class="page-shell auth-shell">
     <PageHeader label="Your account" title="Sign in" intro="Return to the conversation." />
+    <GoogleSignIn />
     <form class="auth-form" data-auth-form data-auth-mode="login">
       <label for="login-email">Email</label>
       <input id="login-email" name="email" type="email" autocomplete="email" maxlength="320" required />

@@ -6,8 +6,8 @@ Astro publication and small community platform for `blog.vyasdevgna.online`. Art
 
 - The current application build is deployed to `https://blog.vyasdevgna.online`.
 - The community schema and nine default categories are applied to Neon `main`.
-- Email/password auth is configured for one-time-code email verification. Neon SMTP accepted a test message.
-- New account creation remains disabled until the Cloudflare Turnstile server secret is installed. The site key is public configuration; the secret is not stored in Git.
+- Email/password auth requires one-time-code email verification. Google uses Neon’s shared OAuth provider and the SDK’s challenge-verified callback. Neon SMTP accepted test and verification messages.
+- Email signup is enabled with the Cloudflare Turnstile server secret installed. The site key is public configuration; the secret is not stored in Git.
 - The moderator account still needs to sign up and verify its email before its application profile can be promoted.
 - In-app notifications are available. Optional community email notifications remain off until `RESEND_API_KEY` is configured on the Worker.
 - Independent off-site backups and a disposable restore drill remain open; see [backup and restore](docs/BACKUPS.md).

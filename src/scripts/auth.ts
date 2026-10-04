@@ -1,4 +1,4 @@
-export {};
+import { safeReturnTo, googleErrorMessage } from "../lib/auth-navigation";
 
 type ApiResult = Record<string, unknown> & { error?: string; message?: string };
 
@@ -30,12 +30,7 @@ function setMessage(form: HTMLFormElement, message: string, error = false) {
 }
 
 function redirectTarget() {
-  const candidate = new URLSearchParams(location.search).get("returnTo");
-  return candidate?.startsWith("/") &&
-    !candidate.startsWith("//") &&
-    !candidate.includes("\\")
-    ? candidate
-    : "/settings/";
+  return safeReturnTo(new URLSearchParams(location.search).get("returnTo"));
 }
 
 declare global {
@@ -155,7 +150,9 @@ for (const form of document.querySelectorAll<HTMLFormElement>(
           password: String(values.get("password") ?? ""),
           turnstileToken: token,
         });
-        location.assign(`/verify-email/?email=${encodeURIComponent(email)}`);
+        location.assign(
+          `/verify-email/?email=${encodeURIComponent(email)}&returnTo=${encodeURIComponent(redirectTarget())}`,
+        );
       } else if (mode === "verify") {
         await api("/api/auth/email-otp/verify-email", {
           email,
@@ -233,4 +230,43 @@ for (const form of document.querySelectorAll<HTMLFormElement>(
         );
       }
     });
+}
+
+const googleButton =
+  document.querySelector<HTMLButtonElement>("[data-google-auth]");
+const googleMessage = document.querySelector<HTMLElement>(
+  "[data-google-message]",
+);
+if (googleButton && googleMessage) {
+  const error = googleErrorMessage(
+    new URLSearchParams(location.search).get("error"),
+  );
+  googleMessage.textContent = error;
+  googleMessage.dataset.error = String(Boolean(error));
+  googleButton.addEventListener("click", async () => {
+    googleButton.disabled = true;
+    googleMessage.textContent = "Opening Google…";
+    try {
+      const result = await api("/api/auth/sign-in/social", {
+        provider: "google",
+        returnTo: redirectTarget(),
+      });
+      const target = new URL(String(result.url ?? ""));
+      // The server restricts this URL to Google or the configured Neon OAuth bridge.
+      if (target.protocol !== "https:")
+        throw new Error("Google sign-in could not be started. Please retry.");
+      location.assign(target.toString());
+    } catch (error) {
+      googleMessage.textContent =
+        error instanceof Error ? error.message : "Google sign-in unavailable.";
+      googleMessage.dataset.error = "true";
+      googleButton.disabled = false;
+    }
+  });
+  void api("/api/auth/get-session", undefined, "GET")
+    .then((session) => {
+      if (session?.user && !new URLSearchParams(location.search).has("error"))
+        location.replace(redirectTarget());
+    })
+    .catch(() => {});
 }

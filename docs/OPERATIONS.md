@@ -6,7 +6,7 @@
 - Worker: `blog` on Cloudflare Workers Static Assets
 - Database and managed auth: Neon project `fancy-silence-20394887`, branch `main`
 - Session KV: `blog-session`
-- The latest setup build is deployed. Signup is still disabled until the Turnstile server secret is installed; a verified moderator account and independent backup/restore drill are still outstanding.
+- The latest setup build is deployed. Email signup and the shared Google provider are enabled. The nominated moderator has completed Google sign-in and received the server-checked moderator role. An independent backup/restore drill is still outstanding.
 
 ## Local commands
 

@@ -23,7 +23,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "max-age=31536000; includeSubDomains",
   );
   response.headers.set("x-content-type-options", "nosniff");
-  response.headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  response.headers.set(
+    "referrer-policy",
+    context.url.pathname.startsWith("/auth/callback")
+      ? "no-referrer"
+      : "strict-origin-when-cross-origin",
+  );
   response.headers.set(
     "permissions-policy",
     "camera=(), microphone=(), geolocation=(), payment=()",

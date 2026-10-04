@@ -12,7 +12,9 @@ Every privileged route checks the role on the server. The browser cannot supply 
 
 ## Initial moderator
 
-The nominated email has no Neon Auth account yet. Do not assign a role by email before signup and verification. After the account verifies and loads `/settings/` once (which creates its application profile), promote exactly the verified matching profile with a Neon SQL console or trusted CLI session:
+The nominated address is configured privately in the Worker’s encrypted `INITIAL_MODERATOR_EMAIL` binding. Profile creation grants the moderator role only after Neon Auth confirms the matching email is verified. Google sign-in can satisfy verification. The initial verified profile was created and the bootstrap binding was removed on 2026-10-04; subsequent role changes remain manual. Existing profiles are never automatically re-promoted.
+
+For manual recovery, after the account verifies and loads `/settings/` once (which creates its application profile), promote exactly the verified matching profile with a Neon SQL console or trusted CLI session:
 
 ```sql
 UPDATE public.profiles

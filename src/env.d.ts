@@ -6,6 +6,7 @@ interface BlogEnv {
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
   RESEND_API_KEY?: string;
+  INITIAL_MODERATOR_EMAIL?: string;
 }
 
 declare module "cloudflare:workers" {

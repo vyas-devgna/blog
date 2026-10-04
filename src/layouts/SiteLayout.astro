@@ -86,8 +86,19 @@ const serializedJsonLd = jsonLd.map((entry) => JSON.stringify(entry).replace(/</
 					<a href="/discussions/">Community</a>
 				</nav>
 				<div class="nav-actions">
-					<a class="account-nav-link" href="/login/">Sign in</a>
-					<a class="account-nav-link account-nav-join" href="/signup/">Join</a>
+					<a data-anonymous-nav class="account-nav-link" href="/login/">Sign in</a>
+					<a data-anonymous-nav class="account-nav-link account-nav-join" href="/signup/">Join</a>
+          <details class="account-menu" data-account-menu hidden>
+            <summary aria-label="Open account menu" title="Your account"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4" /><path d="M4 22v-3a8 8 0 0 1 16 0v3" /></svg></summary>
+            <div class="account-menu-panel">
+              <span data-account-name>Your account</span>
+              <a href="/settings/">Profile and settings</a>
+              <a href="/notifications/">Notifications</a>
+              <a href="/moderation/" data-account-moderation hidden>Moderation</a>
+              <button type="button" data-account-logout>Sign out</button>
+              <span role="status" data-account-error></span>
+            </div>
+          </details>
 					<button
 						class="theme-toggle"
 						id="theme-toggle"
@@ -134,8 +145,9 @@ const serializedJsonLd = jsonLd.map((entry) => JSON.stringify(entry).replace(/</
 				<a href="/about/">About</a>
 				<a href="/search/">Search</a>
 				<a href="/discussions/">Community</a>
-				<a href="/login/">Sign in</a>
-				<a href="/signup/">Create an account</a>
+				<a data-anonymous-nav href="/login/">Sign in</a>
+				<a data-anonymous-nav href="/signup/">Create an account</a>
+        <a data-authenticated-nav href="/settings/" hidden>My account</a>
 			</nav>
 			<a class="mobile-portfolio" href="https://vyasdevgna.online/">Visit the portfolio ↗</a>
 		</div>
@@ -165,5 +177,6 @@ const serializedJsonLd = jsonLd.map((entry) => JSON.stringify(entry).replace(/</
 			<small>© {new Date().getFullYear()} Devgna Vyas. Built for the open web.</small>
 		</footer>
 		<script is:inline src="/scripts/site.js"></script>
+    <script src="../scripts/account-nav.ts"></script>
 	</body>
 </html>

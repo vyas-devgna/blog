@@ -188,9 +188,30 @@ if (root) {
       }
     });
 
+    const security = await request("/api/community/account/security");
+    const hasPassword = security.hasPassword === true;
+    const passwordlessNotice = root.querySelector<HTMLElement>(
+      "[data-passwordless-notice]",
+    );
+    if (passwordlessNotice) passwordlessNotice.hidden = hasPassword;
+    const deletePassword =
+      root.querySelector<HTMLInputElement>("#delete-password");
+    if (deletePassword) {
+      deletePassword.required = hasPassword;
+      deletePassword.hidden = !hasPassword;
+    }
+    const deleteLabel = root.querySelector<HTMLElement>(
+      "[data-delete-password-label]",
+    );
+    if (deleteLabel) deleteLabel.hidden = !hasPassword;
+    const googleDeleteNotice = root.querySelector<HTMLElement>(
+      "[data-google-delete-notice]",
+    );
+    if (googleDeleteNotice) googleDeleteNotice.hidden = hasPassword;
     const passwordForm = root.querySelector<HTMLFormElement>(
       "[data-password-form]",
     );
+    if (passwordForm) passwordForm.hidden = !hasPassword;
     passwordForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const data = new FormData(passwordForm);
@@ -286,8 +307,14 @@ if (root) {
         button.disabled = true;
         try {
           await request("/api/auth/sign-out", {}, "POST");
-        } finally {
           location.assign("/");
+        } catch (error) {
+          button.disabled = false;
+          if (status)
+            status.textContent =
+              error instanceof Error
+                ? error.message
+                : "Sign out failed. Please retry.";
         }
       });
 
@@ -302,6 +329,10 @@ if (root) {
       )
         return;
       const data = new FormData(deleteForm);
+      const button = deleteForm.querySelector<HTMLButtonElement>(
+        'button[type="submit"]',
+      );
+      if (button) button.disabled = true;
       try {
         await request(
           "/api/community/account/delete",
@@ -318,6 +349,7 @@ if (root) {
             : "Could not delete the account.",
           true,
         );
+        if (button) button.disabled = false;
       }
     });
   } catch (error) {

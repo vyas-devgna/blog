@@ -17,4 +17,6 @@ export default defineConfig({
     },
   },
   build: { inlineStylesheets: "auto" },
+  // Keep generated scripts external so they satisfy script-src without unsafe-inline.
+  vite: { build: { assetsInlineLimit: 0 } },
 });

@@ -14,10 +14,10 @@ Public non-secret variables are in `wrangler.jsonc`: `PUBLIC_SITE_URL`, `NEON_AU
 
 - `DATABASE_URL` — Neon `blog_runtime` role, limited to application tables.
 - `NEON_AUTH_COOKIE_SECRET` — Worker-side secure cookie signing secret.
-- `TURNSTILE_SECRET_KEY` — required before signup or new-user posting can pass Siteverify; not yet configured.
+- `TURNSTILE_SECRET_KEY` — installed; required for signup and new-user posting Siteverify checks.
 - `RESEND_API_KEY` — optional; enables reply/moderation email notices.
 
-The Neon Auth custom SMTP provider is saved as `no-reply@notify.vyasdevgna.online`. A test message was dispatched successfully. Auth is configured to require email verification and send an OTP, while provider signups remain disabled until the Turnstile Worker secret is installed.
+The Neon Auth custom SMTP provider is saved as `no-reply@notify.vyasdevgna.online`. A test message was dispatched successfully. Auth is configured to require email verification and send an OTP, and email signup is enabled after installation of the Turnstile Worker secret.
 
 Turnstile is checked server-side on this site's signup route. Neon Auth also exposes a managed auth endpoint; the site challenge is abuse friction for this route, not a network-level restriction on direct requests to that provider.
 
@@ -33,7 +33,7 @@ pnpm deploy
 
 `pnpm deploy` rebuilds and publishes the Worker and static assets. CI currently validates pull requests and pushes to `main`; production deployment is manual. The last setup build was deployed on 2026-10-04. It is not a formal V1 release.
 
-## Enable signup after installing Turnstile
+## Signup recovery configuration
 
 Install the existing widget's secret with Wrangler's hidden prompt:
 
@@ -56,3 +56,21 @@ Verify with `GET /api/community/config` (`signupEnabled: true`) and complete a r
 ## Migrations
 
 Migrations are committed under `drizzle/migrations/`. The application schema migration has been applied to Neon `main`; the command is `pnpm db:migrate` with the intended `DATABASE_URL` in the environment. The repository does not contain database credentials. Use a disposable Neon branch for migration and restore checks.
+
+## Google and account navigation
+
+Google uses the existing Neon shared OAuth application. Both Login and Join call the same provider route, preserving existing accounts through the provider’s verified-email linking rules. Callbacks are fixed to `/auth/callback/`; the Neon SDK exchanges the verifier and sets HttpOnly cookies. Local return paths reject cross-origin targets and control characters.
+
+The public session response excludes tokens and JWT headers. Privileged community routes bypass the SDK cookie cache to check revoked sessions. Navigation initializes immediately and refreshes on restored page display and tab visibility, replacing anonymous links with the account menu. Generated scripts remain external to satisfy the site’s Content Security Policy. Rewritten auth JSON responses clear upstream encoding headers.
+
+## Verification mail
+
+`notify.vyasdevgna.online` has verified DKIM and SPF, and a published DMARC monitoring policy. Open and click tracking are disabled. Provider delivery does not prove placement in the inbox; a new sending domain has little reputation. Check Resend delivery status and the recipient’s actual Authentication-Results headers before changing DNS authentication or buying a sending service.
+
+## Live checks — 2026-10-04
+
+Google sign-in completed into `/settings/`, provisioning the nominated verified moderator. The moderator dashboard loaded successfully. The landing page replaced Sign in/Join with the profile menu and changed the community CTA to Your account. The one-time moderator bootstrap secret was retired after confirming the verified profile.
+
+Live signup config reports `signupEnabled: true`. Login and Join show Google controls. Unknown routes return HTTP 404 with the custom recovery page. OAuth rejects other providers and foreign origins; missing/invalid callback challenges redirect to a local sign-in error. Local checks include session guard, proxy boundary, navigation initialization, and redirect tests. The build checks generated HTML for executable inline scripts that would violate CSP.
+
+Independent encrypted backup and a complete restore drill remain outstanding; this deployment is not a formal V1 release.

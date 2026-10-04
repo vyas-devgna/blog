@@ -1,12 +1,14 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
+import GoogleSignIn from "../components/GoogleSignIn.astro";
 export const prerender = false;
 ---
 
 <SiteLayout title="Create an account" description="Join the Vyas community to comment and take part in discussions." noindex>
   <section class="page-shell auth-shell">
-    <PageHeader label="Your account" title="Join Vyas" intro="A verified email account lets you comment and start discussions. Your articles remain public and never require an account." />
+    <PageHeader label="Your account" title="Join Vyas" intro="Join with Google or a verified email to comment and start discussions. Already joined? Google will sign you back in." />
+    <GoogleSignIn />
     <form class="auth-form" data-auth-form data-auth-mode="signup">
       <label for="signup-name">Display name</label>
       <input id="signup-name" name="name" type="text" autocomplete="name" minlength="1" maxlength="80" required />
@@ -14,7 +16,7 @@ export const prerender = false;
       <input id="signup-email" name="email" type="email" autocomplete="email" maxlength="320" required />
       <label for="signup-password">Password</label>
       <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="password-help" />
-      <small id="password-help">Use at least 12 characters. Neon Auth will email a verification code.</small>
+      <small id="password-help">Use at least 12 characters. We’ll email a verification code.</small>
       <div class="challenge-slot" data-signup-challenge aria-label="Security check"></div>
       <p class="form-message" data-form-message role="status"></p>
       <button class="pill pill-solid" type="submit" disabled>Create account</button>

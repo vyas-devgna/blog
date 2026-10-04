@@ -29,10 +29,11 @@ export interface AuthContext {
   user: AuthenticatedUser;
   profile: typeof profiles.$inferSelect;
   sessionId: string;
+  sessionCreatedAt: string | Date;
   cookies: string[];
 }
 
-const authCookieConfig = () => {
+export const authCookieConfig = () => {
   if (!env.NEON_AUTH_COOKIE_SECRET || env.NEON_AUTH_COOKIE_SECRET.length < 32) {
     throw new ApiError(
       503,
@@ -61,12 +62,12 @@ export async function proxyAuthRequest(request: Request, path: string) {
 
 export async function getAuthContext(
   request: Request,
-  options: { allowDeleted?: boolean } = {},
+  options: { allowDeleted?: boolean; allowBlocked?: boolean } = {},
 ): Promise<AuthContext> {
   const config = authCookieConfig();
   const currentUrl = new URL(request.url);
   const sessionRequest = new Request(
-    new URL("/api/auth/get-session", currentUrl),
+    new URL("/api/auth/get-session?disableCookieCache=true", currentUrl),
     {
       method: "GET",
       headers: new Headers({
@@ -128,6 +129,11 @@ export async function getAuthContext(
         .insert(profiles)
         .values({
           userId: user.id,
+          role:
+            env.INITIAL_MODERATOR_EMAIL?.trim().toLowerCase() ===
+            user.email.toLowerCase()
+              ? "moderator"
+              : "user",
           username,
           displayName: (user.name || "Community member").trim().slice(0, 80),
           emailAddress: user.emailVerified ? user.email.toLowerCase() : null,
@@ -156,7 +162,11 @@ export async function getAuthContext(
       "Your community profile could not be loaded.",
       "profile_unavailable",
     );
-  if (user.emailVerified && profile.emailAddress !== user.email.toLowerCase()) {
+  if (
+    profile.status !== "deleted" &&
+    user.emailVerified &&
+    profile.emailAddress !== user.email.toLowerCase()
+  ) {
     [profile] = await db
       .update(profiles)
       .set({ emailAddress: user.email.toLowerCase(), updatedAt: new Date() })
@@ -170,7 +180,7 @@ export async function getAuthContext(
       "profile_unavailable",
     );
   if (
-    profile.status === "banned" ||
+    (profile.status === "banned" && !options.allowBlocked) ||
     (profile.status === "deleted" && !options.allowDeleted)
   ) {
     throw new ApiError(
@@ -179,7 +189,7 @@ export async function getAuthContext(
       "account_unavailable",
     );
   }
-  if (profile.status === "suspended") {
+  if (profile.status === "suspended" && !options.allowBlocked) {
     throw new ApiError(
       403,
       "This account is suspended from posting.",
@@ -191,6 +201,7 @@ export async function getAuthContext(
     user,
     profile,
     sessionId: session.session.id,
+    sessionCreatedAt: session.session.createdAt,
     cookies: response.headers.getSetCookie?.() ?? [],
   };
 }
@@ -218,13 +229,4 @@ export function usernameBase(value: string) {
     .replace(/[^a-z0-9_]+/g, "_")
     .replace(/^_+|_+$/g, "");
   return base.length >= 3 ? base : "reader";
-}
-
-export function isSafeRedirect(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//") &&
-    !value.includes("\\")
-  );
 }
