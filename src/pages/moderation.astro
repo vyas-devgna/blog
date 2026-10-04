@@ -19,7 +19,7 @@ export const prerender = false;
     </section>
     <section class="settings-card settings-section">
       <h2>Member status</h2>
-      <form data-user-search class="settings-section">
+      <form method="post" data-user-search class="settings-section">
         <label for="moderation-search">Search by username or display name</label>
         <input id="moderation-search" name="q" minlength="2" maxlength="48" required />
         <button class="pill pill-glass" type="submit">Search members</button>

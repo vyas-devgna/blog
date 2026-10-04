@@ -8,7 +8,7 @@ export const prerender = false;
   <section class="page-shell auth-shell">
     <PageHeader label="Your account" title="Check your email" intro="Enter the verification code sent to your address. Codes expire, and you can request another one below." />
     <p class="community-status">If the message is missing, check Spam or Junk for mail from <strong>no-reply@notify.vyasdevgna.online</strong>. Mark it as “Not spam” so future account messages are easier to find.</p>
-    <form class="auth-form" data-auth-form data-auth-mode="verify">
+    <form method="post" class="auth-form" data-auth-form data-auth-mode="verify">
       <label for="verify-email">Email</label>
       <input id="verify-email" name="email" type="email" autocomplete="email" maxlength="320" required />
       <label for="verify-code">Verification code</label>
@@ -17,6 +17,7 @@ export const prerender = false;
       <button class="pill pill-solid" type="submit">Verify email</button>
       <button class="text-button" type="button" data-resend-code>Send a new code</button>
     </form>
+    <noscript><p class="community-hint">JavaScript is required to sign in securely. The writing remains available without it.</p></noscript>
   </section>
   <script src="../scripts/auth.ts"></script>
 </SiteLayout>

@@ -1,26 +1,10 @@
+import { requestJson } from "../lib/client-api";
 import { safeReturnTo, googleErrorMessage } from "../lib/auth-navigation";
 
 type ApiResult = Record<string, unknown> & { error?: string; message?: string };
 
-async function api(
-  path: string,
-  data?: Record<string, unknown>,
-  method = "POST",
-): Promise<ApiResult> {
-  const response = await fetch(path, {
-    method,
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: data ? { "content-type": "application/json" } : undefined,
-    body: data ? JSON.stringify(data) : undefined,
-  });
-  const result = (await response.json().catch(() => ({}))) as ApiResult;
-  if (!response.ok)
-    throw new Error(
-      result.error ?? result.message ?? "The request could not be completed.",
-    );
-  return result;
-}
+const api = (path: string, data?: Record<string, unknown>, method = "POST") =>
+  requestJson<ApiResult>(path, data, method);
 
 function setMessage(form: HTMLFormElement, message: string, error = false) {
   const target = form.querySelector<HTMLElement>("[data-form-message]");

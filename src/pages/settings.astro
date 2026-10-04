@@ -7,10 +7,11 @@ export const prerender = false;
 <SiteLayout title="Account settings" description="Manage your Vyas community profile, preferences, sessions, and account." noindex>
   <section class="page-shell settings-shell" data-settings>
     <PageHeader label="Your account" title="Settings" intro="Manage your public profile and account security." />
-    <p class="community-status" data-settings-status>Loading account…</p>
-    <section class="settings-card settings-section">
+    <p class="community-status" data-settings-status role="status">Loading account…</p>
+    <nav class="settings-navigation" aria-label="Account sections"><a href="#profile-settings">Profile</a><a href="#security-settings">Security</a><a href="#notification-settings">Notifications</a><a href="#delete-settings">Delete account</a></nav>
+    <section class="settings-card settings-section" id="profile-settings">
       <h2>Public profile</h2>
-      <form data-profile-form class="settings-section">
+      <form method="post" data-profile-form class="settings-section">
         <label for="settings-email">Verified account email</label>
         <input id="settings-email" name="email" type="email" readonly />
         <label for="settings-display-name">Display name</label>
@@ -27,10 +28,10 @@ export const prerender = false;
       </form>
       <p><a data-profile-link href="/u/">View your public profile</a></p>
     </section>
-    <section class="settings-card settings-section">
+    <section class="settings-card settings-section" id="security-settings">
       <h2>Password and sessions</h2>
       <p data-passwordless-notice hidden>You joined with Google. You can <a href="/forgot-password/">set a password using an email verification code</a>, or keep signing in with Google.</p>
-      <form data-password-form class="settings-section">
+      <form method="post" data-password-form class="settings-section">
         <label for="current-password">Current password</label>
         <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required />
         <label for="new-password">New password</label>
@@ -47,22 +48,22 @@ export const prerender = false;
       </div>
       <p><a href="/notifications/">View notifications</a> <span data-moderation-link hidden>· <a href="/moderation/">Moderation</a></span></p>
     </section>
-    <section class="settings-card settings-section">
+    <section class="settings-card settings-section" id="notification-settings">
       <h2>Notifications</h2>
-      <form data-preferences-form class="settings-section">
+      <form method="post" data-preferences-form class="settings-section">
         <label class="settings-inline"><input type="checkbox" name="inAppReplies" /> In-app replies</label>
         <label class="settings-inline"><input type="checkbox" name="emailReplies" /> Email replies (optional)</label>
         <label class="settings-inline"><input type="checkbox" name="moderationUpdates" /> In-app moderation updates</label>
         <label class="settings-inline"><input type="checkbox" name="emailModeration" /> Email moderation updates (optional)</label>
-        <small data-email-notice>Email notices require the site's transactional email service. Account verification and password resets use Neon Auth.</small>
+        <small data-email-notice>Email reply notices are optional. Verification and password reset emails are sent separately.</small>
         <p class="form-message" data-preferences-message role="status"></p>
         <button class="pill pill-glass" type="submit">Save preferences</button>
       </form>
     </section>
-    <section class="settings-card settings-section danger-zone">
+    <section class="settings-card settings-section danger-zone" id="delete-settings">
       <h2>Delete account</h2>
       <p class="community-status">This permanently deletes your sign-in account, removes your profile and community posts, and ends all sessions. This cannot be undone.</p>
-      <form data-delete-form class="settings-section">
+      <form method="post" data-delete-form class="settings-section">
         <p data-google-delete-notice hidden>For security, sign in with Google again within five minutes before deleting your account.</p>
         <label data-delete-password-label for="delete-password">Confirm with your password</label>
         <input id="delete-password" name="password" type="password" autocomplete="current-password" required />

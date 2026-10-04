@@ -6,7 +6,7 @@ export const prerender = true;
 const posts = await getPublishedPosts();
 ---
 
-<SiteLayout title="Search" description="Search articles on this site.">
+<SiteLayout title="Search" description="Search articles on this site." noindex>
 	<section class="page-shell search-page">
 		<PageHeader label="The archive" title="Search" intro="Look for an idea, a subject, or a phrase across the writing." />
 		<div class="search-control">

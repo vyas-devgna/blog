@@ -9,7 +9,7 @@ const { label, title, intro } = Astro.props;
 ---
 
 <header class="page-heading">
-	<p class="eyebrow">{label}</p>
 	<h1 class="page-title">{title}</h1>
+	<p class="page-context">{label}</p>
 	{intro && <p class="page-intro">{intro}</p>}
 </header>

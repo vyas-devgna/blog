@@ -1,5 +1,8 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import logo from '../../../public/vd-logo.png';
+import { author } from '../../lib/seo';
+import { render } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { coverForSlug } from '../../lib/cover';
 import { getReadingTime, getPublishedPosts } from '../../lib/posts';
@@ -8,7 +11,7 @@ import { topicSlug } from '../../lib/topics';
 export const prerender = true;
 
 export async function getStaticPaths() {
-	return (await getCollection('blog', ({ data }) => !data.draft)).map((post) => ({
+	return (await getPublishedPosts()).map((post) => ({
 		params: { slug: post.id },
 		props: { post },
 	}));
@@ -42,12 +45,7 @@ const articleStructuredData = [
 		description: post.data.description,
 		datePublished: post.data.publishedAt.toISOString(),
 		dateModified: modified.toISOString(),
-		author: {
-			'@type': 'Person',
-			name: 'Devgna Vyas',
-			url: 'https://vyasdevgna.online/',
-			image: 'https://blog.vyasdevgna.online/vd-logo.png',
-		},
+		author,
 		image: [ogImage],
 		mainEntityOfPage: canonical,
 		publisher: {
@@ -94,18 +92,18 @@ const articleStructuredData = [
 				</nav>
 			</aside>
 		)}
-		<article class="article" itemscope itemtype="https://schema.org/BlogPosting">
+		<article class="article">
 			<header class="article-header">
 				<p class="article-label">
 					<b>No. {articleNumber}</b>
-					<time itemprop="datePublished" datetime={post.data.publishedAt.toISOString()}>{published}</time>
+					<time datetime={post.data.publishedAt.toISOString()}>{published}</time>
 					<span aria-hidden="true">·</span>
 					<span>{readingTime} min read</span>
 				</p>
-				<h1 itemprop="headline">{post.data.title}</h1>
-				<p class="article-intro" itemprop="description">{post.data.description}</p>
+				<h1>{post.data.title}</h1>
+				<p class="article-intro">{post.data.description}</p>
 				<div class="article-byline">
-					<img src="/vd-logo.png" alt="" width="36" height="36" />
+					<Image src={logo} alt="" width={72} height={72} format="webp" style="width:36px;height:36px" />
 					<p>By <a href="https://vyasdevgna.online/">Devgna Vyas</a></p>
 				</div>
 				<figure class="article-cover">
@@ -131,7 +129,7 @@ const articleStructuredData = [
 				</details>
 			)}
 
-			<div class="article-body" itemprop="articleBody"><Content /></div>
+			<div class="article-body"><Content /></div>
 
 			<section class="community-panel article-comments" id="comments" data-comments data-post-slug={post.id} aria-labelledby="comments-heading">
 				<div class="section-heading">
@@ -142,7 +140,7 @@ const articleStructuredData = [
 				<div class="community-list" data-comment-list aria-live="polite"></div>
 				<button class="community-more" type="button" data-comments-more hidden>Load older comments</button>
 				<div class="community-auth-prompt" data-community-prompt><a href="/login/">Sign in</a> or <a href="/signup/">create an account</a> to join the conversation.</div>
-				<form class="community-form" data-comment-form hidden>
+				<form method="post" class="community-form" data-comment-form hidden>
 					<label for="article-comment">Add a comment</label>
 					<textarea id="article-comment" name="body" maxlength="3000" rows="4" required></textarea>
 					<input type="hidden" name="parentId" />
@@ -190,4 +188,5 @@ const articleStructuredData = [
 	</div>
 
 	<script is:inline src="/scripts/article.js"></script>
+	<script src="../../scripts/community.ts"></script>
 </SiteLayout>

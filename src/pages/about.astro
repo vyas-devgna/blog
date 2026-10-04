@@ -1,13 +1,15 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
+import { author } from '../lib/seo';
 export const prerender = true;
+const structuredData = [{ '@context': 'https://schema.org', '@type': 'ProfilePage', url: 'https://blog.vyasdevgna.online/about/', mainEntity: author }];
 ---
 
-<SiteLayout title="About" description="About this independent publication by Vyas.">
+<SiteLayout title="About" description="Devgna Vyas writes about software, systems, research, and open source. Learn about the independent Vyas publication and its community." jsonLd={structuredData}>
 	<section class="page-shell">
 		<PageHeader label="The person behind the notes" title="About" />
-		<div class="plain-copy"><p>This is an independent publication by Vyas: a place to share writing on software, research, and the details that are easy to miss when building things.</p><p>The site is designed so articles remain open to everyone. Community features are being built separately and will require an account when available.</p></div>
+		<div class="plain-copy"><p>I’m Devgna Vyas. Vyas is my independent publication: a place to share writing on software, research, and the details that are easy to miss when building things.</p><p>The site is designed so articles remain open to everyone. Join with Google or a verified email to comment and take part in community discussions. Your account is separate from the writing, so the articles remain readable without signing in.</p></div>
 		<a class="more-link" href="https://vyasdevgna.online/">More about Devgna Vyas</a>
 	</section>
 </SiteLayout>

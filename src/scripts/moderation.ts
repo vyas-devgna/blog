@@ -1,24 +1,10 @@
+import { requestJson } from "../lib/client-api";
 export {};
 
 type JsonResult = Record<string, unknown> & { error?: string; items?: any[] };
 
-async function api(
-  path: string,
-  body?: Record<string, unknown>,
-  method = "GET",
-): Promise<JsonResult> {
-  const response = await fetch(path, {
-    method,
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const result = (await response.json().catch(() => ({}))) as JsonResult;
-  if (!response.ok)
-    throw new Error(result.error ?? "The request could not be completed.");
-  return result;
-}
+const api = (path: string, data?: Record<string, unknown>, method = "GET") =>
+  requestJson<JsonResult>(path, data, method);
 
 function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,

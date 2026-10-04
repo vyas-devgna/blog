@@ -9,7 +9,7 @@ export const prerender = false;
   <section class="page-shell auth-shell">
     <PageHeader label="Your account" title="Join Vyas" intro="Join with Google or a verified email to comment and start discussions. Already joined? Google will sign you back in." />
     <GoogleSignIn />
-    <form class="auth-form" data-auth-form data-auth-mode="signup">
+    <form method="post" class="auth-form" data-auth-form data-auth-mode="signup">
       <label for="signup-name">Display name</label>
       <input id="signup-name" name="name" type="text" autocomplete="name" minlength="1" maxlength="80" required />
       <label for="signup-email">Email</label>
@@ -22,6 +22,7 @@ export const prerender = false;
       <button class="pill pill-solid" type="submit" disabled>Create account</button>
       <p>Already registered? <a href="/login/">Sign in</a>.</p>
     </form>
+    <noscript><p class="community-hint">JavaScript is required to sign in securely. The writing remains available without it.</p></noscript>
   </section>
   <script src="../scripts/auth.ts"></script>
 </SiteLayout>

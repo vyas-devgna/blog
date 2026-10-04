@@ -1,4 +1,5 @@
 ---
+import { author } from '../lib/seo';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import { getPublishedPosts, getTopics } from '../lib/posts';
@@ -20,12 +21,7 @@ const homeStructuredData = [
 		name: 'Vyas',
 		url: 'https://blog.vyasdevgna.online/',
 		description: 'Independent notes on software, research, and the things worth understanding.',
-		author: {
-			'@type': 'Person',
-			name: 'Devgna Vyas',
-			url: 'https://vyasdevgna.online/',
-			image: 'https://blog.vyasdevgna.online/vd-logo.png',
-		},
+		author,
 	},
 ];
 ---
@@ -65,8 +61,8 @@ const homeStructuredData = [
 			<rect width="1200" height="800" fill="url(#hero-veil)" />
 		</svg>
 		<div class="home-hero-content">
-			<p class="exhibit-label"><b>Field notes</b><span>Writing by Devgna Vyas</span></p>
-			<h1 id="home-title"><span>Notes on systems,</span><em>software &amp; research.</em></h1>
+						<h1 id="home-title"><span>Notes on systems,</span><em>software &amp; research.</em></h1>
+			<p class="hero-author">Writing by Devgna Vyas</p>
 			<p class="hero-copy">
 				A place to follow an idea from its first question to the details that make it work.
 			</p>
@@ -81,7 +77,7 @@ const homeStructuredData = [
 	<section class="home-section" aria-labelledby="recent-heading">
 		<div class="section-heading">
 			<div>
-				<p class="section-label">The archive</p>
+
 				<h2 id="recent-heading">Recent writing</h2>
 			</div>
 			<a class="more-link" href="/blog/">All writing</a>
@@ -117,13 +113,14 @@ const homeStructuredData = [
 						<rect width="1200" height="380" fill="url(#empty-light)" />
 					</svg>
 					<div class="empty-caption">
-						<p class="exhibit-label"><b>Exhibit 00</b><span>The first essays are being written</span></p>
+						<h3>The first essays are taking shape.</h3><p>Systems, software, and the questions behind them.</p>
 					</div>
 				</div>
 				<div class="empty-links">
-					<p>Follow new writing through the RSS feed, or learn more about Devgna’s work.</p>
+					<p>There are no published essays yet. Explore the projects, join a discussion, or follow the RSS feed for new writing.</p>
 					<a class="more-link" href="/rss.xml">Subscribe to RSS</a>
-					<a class="more-link" href="https://vyasdevgna.online/">Visit the portfolio</a>
+					<a class="more-link" href="/projects/">Explore projects</a>
+					<a class="more-link" href="/discussions/">Join a discussion</a>
 				</div>
 			</div>
 		)}

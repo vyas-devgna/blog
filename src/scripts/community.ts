@@ -1,3 +1,5 @@
+import { actionDialog } from "../lib/dialog";
+import { requestJson } from "../lib/client-api";
 export {};
 
 type CommunityProfile = {
@@ -40,23 +42,8 @@ type Result = Record<string, unknown> & {
   item?: CommunityItem;
 };
 
-async function api(
-  path: string,
-  data?: Record<string, unknown>,
-  method = "GET",
-): Promise<Result> {
-  const response = await fetch(path, {
-    method,
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: data ? { "content-type": "application/json" } : undefined,
-    body: data ? JSON.stringify(data) : undefined,
-  });
-  const result = (await response.json().catch(() => ({}))) as Result;
-  if (!response.ok)
-    throw new Error(result.error ?? "The request could not be completed.");
-  return result;
-}
+const api = (path: string, data?: Record<string, unknown>, method = "GET") =>
+  requestJson<Result>(path, data, method);
 
 function textElement<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -302,7 +289,14 @@ function makeContentItem(
       const edit = textElement("button", "", "Edit");
       edit.type = "button";
       edit.addEventListener("click", async () => {
-        const next = window.prompt(`Edit ${targetType}`, item.body);
+        const next = await actionDialog({
+          title: `Edit ${targetType}`,
+          description:
+            "Update your contribution. Other members will see the edited version.",
+          action: "Save changes",
+          value: item.body,
+          maxLength: targetType === "comment" ? 3000 : 6000,
+        });
         if (next === null || next === item.body) return;
         try {
           await api(
@@ -323,9 +317,11 @@ function makeContentItem(
       remove.type = "button";
       remove.addEventListener("click", async () => {
         if (
-          !window.confirm(
-            "Delete this content? It will be replaced with a removed marker.",
-          )
+          !(await actionDialog({
+            title: "Delete this contribution?",
+            description: "It will be replaced with a removed marker.",
+            action: "Delete contribution",
+          }))
         )
           return;
         try {
@@ -510,10 +506,13 @@ async function setupDiscussionIndex(root: HTMLElement) {
   const pageLabel = pagination?.querySelector<HTMLElement>("[data-page-label]");
   let page = 1;
   let maxPage = 1;
+  let renderVersion = 0;
   if (!list || !filter || !categoryInput || !form) return;
   const profile = await loadCommunityContext();
   try {
     const result = await api("/api/community/categories");
+    filter.replaceChildren(new Option("All categories", ""));
+    categoryInput.replaceChildren();
     for (const category of result.items ?? []) {
       if (!category.slug) continue;
       const option = document.createElement("option");
@@ -544,10 +543,12 @@ async function setupDiscussionIndex(root: HTMLElement) {
     void mountTurnstile(form, "thread");
   }
   const render = async () => {
+    const version = ++renderVersion;
     const query = new URLSearchParams({ page: String(page), limit: "20" });
     if (filter.value) query.set("category", filter.value);
     try {
       const result = await api(`/api/community/discussions/threads?${query}`);
+      if (version !== renderVersion) return;
       list.replaceChildren();
       for (const item of result.items ?? []) {
         const link = document.createElement("a");
@@ -589,6 +590,7 @@ async function setupDiscussionIndex(root: HTMLElement) {
           : "No discussions in this category yet. Start one when you’re ready.",
       );
     } catch (error) {
+      if (version !== renderVersion) return;
       setStatus(
         root,
         error instanceof Error ? error.message : "Discussions are unavailable.",

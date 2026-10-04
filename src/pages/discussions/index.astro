@@ -1,25 +1,31 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import PageHeader from "../../components/PageHeader.astro";
+import { getPublicDiscussionOverview } from "../../lib/server/public-discussions";
 export const prerender = false;
+let overview: Awaited<ReturnType<typeof getPublicDiscussionOverview>> = { categories: [], threads: [] };
+let unavailable = false;
+try { overview = await getPublicDiscussionOverview(); } catch { unavailable = true; Astro.response.status = 503; }
+const communityDescription = "Discuss software, systems, research, and open source with the Vyas community. Browse conversations or sign in to contribute.";
 ---
 
-<SiteLayout title="Discussions" description="A technical community for questions, projects, and considered exchange.">
+<SiteLayout title="Discussions" description={communityDescription} noindex={unavailable}>
   <section class="page-shell discussion-index-shell" data-discussion-index>
     <PageHeader label="Community" title="Discussions" intro="A small forum for questions, projects, and considered exchange. Read along or sign in to contribute." />
     <div class="discussion-toolbar">
       <label for="discussion-category">Browse category</label>
       <select id="discussion-category" data-category-filter aria-label="Filter discussions by category">
         <option value="">All categories</option>
+        {overview.categories.map((category) => <option value={category.slug}>{category.name}</option>)}
       </select>
       <a class="pill pill-solid" href="/signup/" data-start-discussion>Start a discussion</a>
     </div>
-    <form class="discussion-create" data-thread-form hidden>
+    <form method="post" class="discussion-create community-form" data-thread-form hidden>
       <h2>Start a discussion</h2>
       <label for="thread-title">Title</label>
       <input id="thread-title" name="title" minlength="5" maxlength="140" required />
       <label for="thread-category">Category</label>
-      <select id="thread-category" name="category" required></select>
+      <select id="thread-category" name="category" required>{overview.categories.map((category) => <option value={category.slug}>{category.name}</option>)}</select>
       <label for="thread-body">What would you like to discuss?</label>
       <textarea id="thread-body" name="body" minlength="20" maxlength="10000" rows="6" required></textarea>
       <div class="challenge-slot" data-challenge-slot hidden></div>
@@ -27,8 +33,19 @@ export const prerender = false;
       <button class="pill pill-solid" type="submit">Publish discussion</button>
     </form>
     <p class="community-auth-prompt" data-community-prompt><a href="/login/?returnTo=%2Fdiscussions%2F">Sign in</a> or <a href="/signup/">create an account</a> to start a discussion.</p>
-    <p class="community-status" data-community-status>Discussions are loading…</p>
-    <div class="discussion-list" data-discussion-list aria-live="polite"></div>
+    <p class="community-status" data-community-status role="status">{unavailable ? "Discussions are temporarily unavailable. Refresh to try again." : overview.threads.length ? "" : "No discussions yet. Bring a question or share something you’re building."}</p>
+    <div class="discussion-list" data-discussion-list aria-live="polite">
+      {overview.threads.map((thread) => <a class="discussion-card" href={`/discussions/${encodeURIComponent(thread.slug)}/`}>
+        <span class="discussion-category">{thread.categoryName}</span><h2>{thread.title}</h2>
+        <p class="discussion-body">{thread.body.slice(0, 240)}</p>
+        <span class="discussion-meta">{thread.profileStatus === "deleted" ? "Deleted member" : thread.displayName ?? "Community member"} · {thread.replyCount} replies</span>
+      </a>)}
+    </div>
+    <section class="community-directory" aria-labelledby="community-categories-heading">
+      <h2 id="community-categories-heading">Find your conversation</h2>
+      <dl>{overview.categories.map((category) => <div><dt>{category.name}</dt><dd>{category.description}</dd></div>)}</dl>
+    </section>
+    <noscript><p class="community-hint">You can read discussions without JavaScript. Enable it to filter, sign in, and contribute.</p></noscript>
     <div class="community-pagination" data-discussion-pagination hidden>
       <button type="button" data-page-prev>Previous</button><span data-page-label></span><button type="button" data-page-next>Next</button>
     </div>

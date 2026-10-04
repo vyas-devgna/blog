@@ -1,26 +1,14 @@
+import { actionDialog } from "../lib/dialog";
+import { requestJson } from "../lib/client-api";
 export {};
 
 type Json = Record<string, unknown> & { error?: string; message?: string };
 
-async function request(
+const request = (
   path: string,
-  body?: Record<string, unknown>,
+  data?: Record<string, unknown>,
   method = "GET",
-): Promise<Json> {
-  const response = await fetch(path, {
-    method,
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: body ? { "content-type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const result = (await response.json().catch(() => ({}))) as Json;
-  if (!response.ok)
-    throw new Error(
-      result.error ?? result.message ?? "The request could not be completed.",
-    );
-  return result;
-}
+) => requestJson<Json>(path, data, method);
 
 function message(
   form: HTMLFormElement | HTMLElement | null,
@@ -323,9 +311,12 @@ if (root) {
     deleteForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (
-        !window.confirm(
-          "Permanently delete your account and community posts? This cannot be undone.",
-        )
+        !(await actionDialog({
+          title: "Permanently delete your account?",
+          description:
+            "Your account and community posts will be removed and all sessions ended. This cannot be undone.",
+          action: "Delete my account",
+        }))
       )
         return;
       const data = new FormData(deleteForm);

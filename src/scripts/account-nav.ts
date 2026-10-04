@@ -30,6 +30,17 @@ async function refreshAccountNav() {
     const name = document.querySelector<HTMLElement>("[data-account-name]");
     if (name && signedIn)
       name.textContent = session.user.name || "Your account";
+    const initials = document.querySelector<HTMLElement>(
+      "[data-account-initials]",
+    );
+    if (initials && signedIn)
+      initials.textContent = String(session.user.name || "Vyas")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toLocaleUpperCase();
     if (signedIn) {
       const profileResponse = await fetch("/api/community/profile", {
         credentials: "same-origin",

@@ -1,0 +1,756 @@
+.account-nav-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.account-nav-join {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.account-nav-join:hover {
+  background: var(--primary-hover);
+}
+
+.auth-shell {
+  max-width: 560px;
+}
+
+.auth-form,
+.community-form,
+.settings-card,
+.moderation-card {
+  display: grid;
+  gap: 10px;
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--tile);
+}
+
+.auth-form {
+  width: 100%;
+  max-width: none;
+}
+.auth-form p {
+  margin: 8px 0 0;
+  font-size: 15px;
+}
+
+.auth-form label,
+.community-form label,
+.settings-card label,
+.moderation-card label {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.auth-form input,
+.community-form input,
+.community-form textarea,
+.community-form select,
+.discussion-toolbar select,
+.discussion-create select,
+.discussion-create input,
+.discussion-create textarea,
+.settings-card input,
+.settings-card textarea,
+.moderation-card input,
+.moderation-card textarea,
+.moderation-card select {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 13px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  letter-spacing: normal;
+}
+
+.community-form textarea,
+.settings-card textarea,
+.moderation-card textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.auth-form small,
+.settings-card small,
+.community-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.form-message {
+  min-height: 1.4em;
+  margin: 2px 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.form-message[data-error="true"] {
+  color: #b42318;
+}
+
+:root[data-theme="dark"] .form-message[data-error="true"] {
+  color: #ff9b91;
+}
+
+.text-button {
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--link);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.community-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: clamp(48px, 8vw, 88px);
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.community-panel .section-heading {
+  margin-bottom: 0;
+}
+
+.community-status,
+.community-auth-prompt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.community-list,
+.discussion-list,
+.reply-list,
+.profile-discussions,
+.moderation-list {
+  display: grid;
+  gap: 12px;
+}
+
+.community-item,
+.discussion-card,
+.notification-card,
+.report-card,
+.profile-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--tile);
+}
+
+.community-item-header,
+.discussion-card-header,
+.community-item-actions,
+.community-pagination,
+.moderation-actions,
+.discussion-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.community-item-header {
+  justify-content: space-between;
+}
+
+.community-item-header a,
+.discussion-author {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.community-item time,
+.discussion-meta,
+.notification-card time,
+.report-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.community-item-body,
+.discussion-body,
+.profile-bio {
+  margin: 14px 0 0;
+  color: var(--ink-2);
+  font-family: var(--reading);
+  font-size: 1.08rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.community-item[data-deleted="true"] .community-item-body {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.community-item-actions {
+  margin-top: 14px;
+}
+
+.community-item-actions button,
+.community-more,
+.community-pagination button,
+.moderation-actions button,
+.discussion-toolbar button {
+  min-height: 44px;
+  padding: 7px 13px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.community-item-actions button:hover,
+.community-more:hover,
+.community-pagination button:hover,
+.moderation-actions button:hover,
+.discussion-toolbar button:hover {
+  border-color: var(--primary);
+  color: var(--link);
+}
+
+.community-nested {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0 18px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line-2);
+}
+
+.discussion-index-shell,
+.thread-shell,
+.moderation-shell,
+.settings-shell,
+.profile-shell {
+  display: grid;
+  gap: 22px;
+  max-width: 900px;
+}
+
+.discussion-create {
+  display: grid;
+  gap: 14px;
+  padding: clamp(20px, 4vw, 30px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.discussion-create[hidden],
+.community-form[hidden],
+.community-auth-prompt[hidden] {
+  display: none;
+}
+
+.discussion-card {
+  display: grid;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+.discussion-card h2,
+.discussion-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.discussion-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-soft);
+}
+
+.discussion-category {
+  color: var(--link);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.discussion-page-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 7vw, 4.5rem);
+  letter-spacing: -0.04em;
+  line-height: 1.03;
+  text-wrap: balance;
+}
+
+.discussion-page-body {
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--reading);
+  font-size: clamp(1.15rem, 2.5vw, 1.3rem);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.notification-card a,
+.report-card a,
+.profile-card a {
+  color: var(--ink);
+}
+
+.report-card h2,
+.profile-card h2,
+.settings-card h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+}
+
+.moderation-actions {
+  margin-top: 14px;
+}
+
+.settings-section {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-session-list {
+  display: grid;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-session-list h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.settings-session-list ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-session-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 18px;
+  color: var(--ink-2);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.settings-inline {
+  min-height: 48px;
+  padding: 10px 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+}
+
+.settings-inline input {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
+.danger-zone {
+  border-color: rgb(190 40 25 / 0.38);
+}
+
+.community-more {
+  justify-self: center;
+}
+
+.challenge-slot {
+  min-height: 66px;
+}
+
+.reset-fields {
+  display: grid;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .site-header-inner {
+    width: calc(100% - 28px);
+  }
+  .desktop-nav {
+    display: none;
+  }
+  .nav-actions {
+    gap: 4px;
+  }
+  .account-nav-link {
+    min-height: 44px;
+    padding-inline: 9px;
+    font-size: 12px;
+  }
+  .article-comments {
+    margin-top: 48px;
+  }
+  .community-item,
+  .discussion-card,
+  .notification-card,
+  .report-card,
+  .profile-card {
+    padding: 16px;
+  }
+  .community-nested {
+    margin-left: 8px;
+    padding-left: 10px;
+  }
+}
+
+[hidden] {
+  display: none !important;
+}
+.account-menu {
+  position: relative;
+}
+.account-menu summary {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  cursor: pointer;
+  list-style: none;
+}
+.account-menu summary::-webkit-details-marker {
+  display: none;
+}
+.account-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: 240px;
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 12%);
+}
+.account-menu-panel a,
+.account-menu-panel button {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  text-align: left;
+}
+.account-menu-panel button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.account-menu-panel span {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.social-auth {
+  margin: 0 0 24px;
+}
+.google-auth-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 20px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.auth-separator {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.auth-separator::before,
+.auth-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-2);
+}
+
+.auth-shell .page-heading {
+  margin-bottom: 28px;
+}
+.auth-shell .page-title {
+  font-size: clamp(2.8rem, 7vw, 4rem);
+}
+.auth-form label:not(:first-child),
+.settings-section label:not(.settings-inline) {
+  margin-top: 10px;
+}
+.auth-form input,
+.settings-card input,
+.community-form input,
+.community-form select,
+.community-form textarea,
+.settings-card textarea,
+.moderation-card textarea,
+.moderation-card select {
+  font-size: 16px;
+}
+.auth-form .pill {
+  margin-top: 8px;
+}
+.google-auth-button:hover {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+.community-status[data-error="true"],
+[data-error="true"] {
+  color: #b42318;
+}
+:root[data-theme="dark"] [data-error="true"] {
+  color: #ff9b91;
+}
+.form-message:empty {
+  min-height: 0;
+  margin: 0;
+}
+.settings-card .pill {
+  justify-self: start;
+}
+.settings-card p {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+.settings-session-list {
+  font-variant-numeric: tabular-nums;
+}
+.discussion-toolbar select {
+  min-width: min(240px, 100%);
+  font-size: 16px;
+}
+.discussion-toolbar > label {
+  font-size: 14px;
+  color: var(--muted);
+}
+.discussion-body {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.community-directory {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.community-directory h2 {
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+}
+.community-directory dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 32px;
+}
+.community-directory dl > div {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.community-directory dt {
+  font-weight: 600;
+}
+.community-directory dd {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.account-menu summary:hover,
+.account-menu[open] summary {
+  color: var(--link);
+  border-color: var(--primary);
+}
+.account-menu-panel a:hover,
+.account-menu-panel button:hover {
+  background: var(--surface);
+  color: var(--link);
+}
+.account-menu-panel .account-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+}
+.account-menu-panel [data-account-name] {
+  padding: 4px 12px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.action-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100svh - 48px);
+  padding: clamp(24px, 5vw, 36px);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.25);
+}
+.action-dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(4px);
+}
+.action-dialog h2 {
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+.action-dialog p {
+  color: var(--muted);
+  margin: 14px 0 24px;
+}
+.action-dialog textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 12px;
+  margin-top: 24px;
+}
+@media (max-width: 600px) {
+  .community-directory dl {
+    grid-template-columns: 1fr;
+  }
+  .discussion-toolbar {
+    align-items: stretch;
+  }
+  .discussion-toolbar select {
+    width: 100%;
+  }
+  .account-menu-panel {
+    width: min(280px, calc(100vw - 32px));
+  }
+  .dialog-actions .pill {
+    flex: 1;
+  }
+}
+
+.password-control {
+  position: relative;
+}
+.password-control input {
+  padding-right: 76px;
+}
+.password-control button {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  bottom: 2px;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--link);
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+.password-control button:hover {
+  background: var(--surface);
+}
+
+.settings-navigation {
+  position: sticky;
+  top: calc(var(--nav-height) + 12px);
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg);
+}
+.settings-navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--ink-2);
+}
+.settings-navigation a:hover {
+  color: var(--link);
+  background: var(--surface);
+}

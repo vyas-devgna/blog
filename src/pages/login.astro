@@ -9,7 +9,7 @@ export const prerender = false;
   <section class="page-shell auth-shell">
     <PageHeader label="Your account" title="Sign in" intro="Return to the conversation." />
     <GoogleSignIn />
-    <form class="auth-form" data-auth-form data-auth-mode="login">
+    <form method="post" class="auth-form" data-auth-form data-auth-mode="login">
       <label for="login-email">Email</label>
       <input id="login-email" name="email" type="email" autocomplete="email" maxlength="320" required />
       <label for="login-password">Password</label>
@@ -19,6 +19,7 @@ export const prerender = false;
       <p><a href="/forgot-password/">Forgot your password?</a></p>
       <p>New here? <a href="/signup/">Create an account</a>.</p>
     </form>
+    <noscript><p class="community-hint">JavaScript is required to sign in securely. The writing remains available without it.</p></noscript>
   </section>
   <script src="../scripts/auth.ts"></script>
 </SiteLayout>

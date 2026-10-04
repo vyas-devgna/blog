@@ -50,6 +50,7 @@ try {
   if (row) {
     thread = {
       ...row,
+      indexable: row.indexable && row.profileStatus === "active",
       username: row.profileStatus === "deleted" ? null : row.username,
       displayName: row.profileStatus === "deleted" || !row.displayName ? "Deleted member" : row.displayName,
       authorId: row.profileStatus === "deleted" ? null : row.authorId,
@@ -62,7 +63,13 @@ try {
 const description = thread ? thread.body.slice(0, 160) : unavailable ? "Community services are temporarily unavailable." : "That discussion was not found.";
 ---
 
-<SiteLayout title={thread?.title ?? "Discussion unavailable"} description={description} noindex={!thread?.indexable}>
+<SiteLayout title={thread?.title ?? "Discussion unavailable"} description={description} noindex={!thread?.indexable} jsonLd={thread?.indexable ? [{
+  '@context': 'https://schema.org', '@type': 'DiscussionForumPosting',
+  '@id': new URL(`/discussions/${thread.slug}/`, Astro.site).toString(),
+  headline: thread.title, text: thread.body, datePublished: thread.createdAt.toISOString(), dateModified: thread.updatedAt.toISOString(),
+  author: { '@type': 'Person', name: thread.displayName, url: new URL(`/u/${thread.username}/`, Astro.site).toString() },
+  url: new URL(`/discussions/${thread.slug}/`, Astro.site).toString(),
+}] : []}>
   <section class="page-shell thread-shell" data-discussion-thread data-slug={thread?.slug ?? ""} data-thread-id={thread?.id ?? ""}>
     {thread ? (
       <>
@@ -78,7 +85,7 @@ const description = thread ? thread.body.slice(0, 160) : unavailable ? "Communit
         <div class="community-list" data-thread-replies aria-live="polite"></div>
         <button class="community-more" type="button" data-replies-more hidden>Load older replies</button>
         {thread.locked ? <p class="community-status">This discussion is locked. Replies are closed.</p> : (
-          <form class="community-form" data-reply-form>
+          <form method="post" class="community-form" data-reply-form>
             <label for="thread-reply">Add a reply</label>
             <textarea id="thread-reply" name="body" maxlength="6000" rows="4" required></textarea>
             <input type="hidden" name="parentId" />
