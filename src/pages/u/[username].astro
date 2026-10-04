@@ -1,0 +1,72 @@
+---
+import { and, desc, eq } from "drizzle-orm";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { discussionThreads, profiles } from "../../lib/db/schema";
+import { getDb } from "../../lib/server/db";
+
+export const prerender = false;
+const username = Astro.params.username ?? "";
+let profile: { username: string; displayName: string; bio: string | null; website: string | null; createdAt: Date; deleted: boolean } | null = null;
+let discussions: Array<{ slug: string; title: string; createdAt: Date; replyCount: number }> = [];
+let unavailable = false;
+try {
+  const [row] = await getDb().select({
+    userId: profiles.userId,
+    username: profiles.username,
+    displayName: profiles.displayName,
+    bio: profiles.bio,
+    website: profiles.website,
+    status: profiles.status,
+    createdAt: profiles.createdAt,
+  }).from(profiles).where(eq(profiles.username, username)).limit(1);
+  if (row && row.status !== "banned") {
+    const deleted = row.status === "deleted";
+    profile = {
+      username: deleted ? "" : row.username,
+      displayName: deleted ? "Deleted member" : row.displayName,
+      bio: deleted ? null : row.bio,
+      website: deleted ? null : row.website,
+      createdAt: row.createdAt,
+      deleted,
+    };
+    if (!deleted) {
+      discussions = await getDb().select({ slug: discussionThreads.slug, title: discussionThreads.title, createdAt: discussionThreads.createdAt, replyCount: discussionThreads.replyCount })
+        .from(discussionThreads).where(and(eq(discussionThreads.authorId, row.userId), eq(discussionThreads.status, "visible")))
+        .orderBy(desc(discussionThreads.createdAt)).limit(10);
+    }
+  } else Astro.response.status = 404;
+} catch {
+  unavailable = true;
+  Astro.response.status = 503;
+}
+const title = profile?.displayName ?? (unavailable ? "Profile unavailable" : "Profile not found");
+---
+
+<SiteLayout title={title} description={profile?.bio ?? "A member of the Vyas community."} noindex>
+  <section class="page-shell profile-shell">
+    {profile ? (
+      <>
+        <PageHeader label="Community profile" title={profile.displayName} intro={profile.deleted ? "This account was deleted." : `Joined ${new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(profile.createdAt)}${profile.username ? ` · @${profile.username}` : ""}`} />
+        {profile.bio && <p class="profile-bio">{profile.bio}</p>}
+        {profile.website && <p><a href={profile.website} rel="ugc nofollow noopener noreferrer" target="_blank">Visit website ↗</a></p>}
+        <section class="settings-section">
+          <h2>Recent discussions</h2>
+          {discussions.length ? (
+            <div class="profile-discussions">
+              {discussions.map((item) => (
+                <a class="discussion-card" href={`/discussions/${item.slug}/`}>
+                  <h2>{item.title}</h2>
+                  <span class="discussion-meta">{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(item.createdAt)} · {item.replyCount} replies</span>
+                </a>
+              ))}
+            </div>
+          ) : <p class="community-status">No public discussions yet.</p>}
+        </section>
+      </>
+    ) : (
+      <PageHeader label="Community profile" title={unavailable ? "Profile unavailable" : "Not found"} intro={unavailable ? "Community services are temporarily unavailable." : "This member profile could not be found."} />
+    )}
+    <a class="more-link" href="/discussions/">Back to discussions</a>
+  </section>
+</SiteLayout>

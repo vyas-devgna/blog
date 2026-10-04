@@ -1,0 +1,22 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+export const prerender = false;
+---
+
+<SiteLayout title="Sign in" description="Sign in to your Vyas community account." noindex>
+  <section class="page-shell auth-shell">
+    <PageHeader label="Your account" title="Sign in" intro="Return to the conversation." />
+    <form class="auth-form" data-auth-form data-auth-mode="login">
+      <label for="login-email">Email</label>
+      <input id="login-email" name="email" type="email" autocomplete="email" maxlength="320" required />
+      <label for="login-password">Password</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+      <p class="form-message" data-form-message role="status"></p>
+      <button class="pill pill-solid" type="submit">Sign in</button>
+      <p><a href="/forgot-password/">Forgot your password?</a></p>
+      <p>New here? <a href="/signup/">Create an account</a>.</p>
+    </form>
+  </section>
+  <script src="../scripts/auth.ts"></script>
+</SiteLayout>

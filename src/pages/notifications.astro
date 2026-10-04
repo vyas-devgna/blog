@@ -1,0 +1,15 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+export const prerender = false;
+---
+
+<SiteLayout title="Notifications" description="Community replies and moderation updates for your account." noindex>
+  <section class="page-shell settings-shell" data-notifications>
+    <PageHeader label="Your account" title="Notifications" intro="Replies and moderation updates for your community activity." />
+    <p class="community-status" data-community-status>Loading notifications…</p>
+    <button class="community-more" type="button" data-read-all hidden>Mark all as read</button>
+    <div class="discussion-list" data-notification-list></div>
+  </section>
+  <script src="../scripts/community.ts"></script>
+</SiteLayout>

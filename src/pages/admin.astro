@@ -1,0 +1,14 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+export const prerender = false;
+---
+
+<SiteLayout title="Admin" description="Administration for the Vyas publication community." noindex>
+  <section class="page-shell moderation-shell" data-admin>
+    <PageHeader label="Administration" title="Admin" intro="Restricted account and community overview." />
+    <p class="community-status" data-community-status>Checking administrator access…</p>
+    <div class="profile-card" data-admin-stats></div>
+  </section>
+  <script src="../scripts/moderation.ts"></script>
+</SiteLayout>

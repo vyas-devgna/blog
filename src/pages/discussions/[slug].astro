@@ -1,0 +1,101 @@
+---
+import { and, eq } from "drizzle-orm";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { discussionCategories, discussionThreads, profiles } from "../../lib/db/schema";
+import { getDb } from "../../lib/server/db";
+
+export const prerender = false;
+const slug = Astro.params.slug ?? "";
+let thread: {
+  id: string;
+  slug: string;
+  title: string;
+  body: string;
+  indexable: boolean;
+  locked: boolean;
+  pinned: boolean;
+  replyCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  category: string;
+  categoryName: string;
+  username: string | null;
+  displayName: string;
+  authorId: string | null;
+} | null = null;
+let unavailable = false;
+try {
+  const [row] = await getDb().select({
+    id: discussionThreads.id,
+    slug: discussionThreads.slug,
+    title: discussionThreads.title,
+    body: discussionThreads.body,
+    indexable: discussionThreads.indexable,
+    locked: discussionThreads.locked,
+    pinned: discussionThreads.pinned,
+    replyCount: discussionThreads.replyCount,
+    createdAt: discussionThreads.createdAt,
+    updatedAt: discussionThreads.updatedAt,
+    category: discussionCategories.slug,
+    categoryName: discussionCategories.name,
+    username: profiles.username,
+    displayName: profiles.displayName,
+    profileStatus: profiles.status,
+    authorId: profiles.userId,
+  }).from(discussionThreads)
+    .innerJoin(discussionCategories, eq(discussionThreads.categoryId, discussionCategories.id))
+    .leftJoin(profiles, eq(discussionThreads.authorId, profiles.userId))
+    .where(and(eq(discussionThreads.slug, slug), eq(discussionThreads.status, "visible"), eq(discussionCategories.active, true))).limit(1);
+  if (row) {
+    thread = {
+      ...row,
+      username: row.profileStatus === "deleted" ? null : row.username,
+      displayName: row.profileStatus === "deleted" || !row.displayName ? "Deleted member" : row.displayName,
+      authorId: row.profileStatus === "deleted" ? null : row.authorId,
+    };
+  } else Astro.response.status = 404;
+} catch {
+  unavailable = true;
+  Astro.response.status = 503;
+}
+const description = thread ? thread.body.slice(0, 160) : unavailable ? "Community services are temporarily unavailable." : "That discussion was not found.";
+---
+
+<SiteLayout title={thread?.title ?? "Discussion unavailable"} description={description} noindex={!thread?.indexable}>
+  <section class="page-shell thread-shell" data-discussion-thread data-slug={thread?.slug ?? ""} data-thread-id={thread?.id ?? ""}>
+    {thread ? (
+      <>
+        <PageHeader label={`${thread.categoryName}${thread.pinned ? " · Pinned" : ""}`} title={thread.title} intro={`${thread.displayName} · ${new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(thread.createdAt)}${thread.updatedAt.valueOf() !== thread.createdAt.valueOf() ? " · edited" : ""}`} />
+        <p class="discussion-page-body">{thread.body}</p>
+        <div class="discussion-toolbar" data-thread-actions>
+          <button type="button" data-thread-reaction>Like</button>
+          <button type="button" data-thread-bookmark>Save</button>
+          <button type="button" data-thread-subscribe>Follow replies</button>
+          <button type="button" data-thread-report>Report</button>
+          <span class="community-status">{thread.replyCount} replies {thread.locked ? "· Locked" : ""}</span>
+        </div>
+        <div class="community-list" data-thread-replies aria-live="polite"></div>
+        <button class="community-more" type="button" data-replies-more hidden>Load older replies</button>
+        {thread.locked ? <p class="community-status">This discussion is locked. Replies are closed.</p> : (
+          <form class="community-form" data-reply-form>
+            <label for="thread-reply">Add a reply</label>
+            <textarea id="thread-reply" name="body" maxlength="6000" rows="4" required></textarea>
+            <input type="hidden" name="parentId" />
+            <button class="text-button" type="button" data-cancel-reply hidden>Cancel reply</button>
+            <div class="challenge-slot" data-challenge-slot hidden></div>
+            <p class="form-message" data-form-message role="status"></p>
+            <button class="pill pill-solid" type="submit">Post reply</button>
+          </form>
+        )}
+        <p class="community-auth-prompt" data-community-prompt hidden><a href={`/login/?returnTo=${encodeURIComponent(`/discussions/${thread.slug}/`)}`}>Sign in</a> or <a href="/signup/">create an account</a> to take part.</p>
+      </>
+    ) : (
+      <>
+        <PageHeader label="Community" title={unavailable ? "Discussion unavailable" : "Not found"} intro={unavailable ? "Community services are temporarily unavailable. The publication is still available." : "This discussion may have been removed or never existed."} />
+        <a class="more-link" href="/discussions/">Back to discussions</a>
+      </>
+    )}
+  </section>
+  {thread && <script src="../../scripts/community.ts"></script>}
+</SiteLayout>

@@ -133,6 +133,26 @@ const articleStructuredData = [
 
 			<div class="article-body" itemprop="articleBody"><Content /></div>
 
+			<section class="community-panel article-comments" id="comments" data-comments data-post-slug={post.id} aria-labelledby="comments-heading">
+				<div class="section-heading">
+					<div><p class="section-label">Conversation</p><h2 id="comments-heading">Comments</h2></div>
+					<a class="more-link" href="/discussions/">Visit discussions</a>
+				</div>
+				<p class="community-status" data-community-status>Comments load separately so the article stays readable if community services are offline.</p>
+				<div class="community-list" data-comment-list aria-live="polite"></div>
+				<button class="community-more" type="button" data-comments-more hidden>Load older comments</button>
+				<div class="community-auth-prompt" data-community-prompt><a href="/login/">Sign in</a> or <a href="/signup/">create an account</a> to join the conversation.</div>
+				<form class="community-form" data-comment-form hidden>
+					<label for="article-comment">Add a comment</label>
+					<textarea id="article-comment" name="body" maxlength="3000" rows="4" required></textarea>
+					<input type="hidden" name="parentId" />
+					<button class="text-button" type="button" data-cancel-reply hidden>Cancel reply</button>
+					<div class="challenge-slot" data-challenge-slot hidden></div>
+					<p class="form-message" data-form-message role="status"></p>
+					<button class="pill pill-solid" type="submit">Post comment</button>
+				</form>
+			</section>
+
 			<footer class="article-footer">
 				<div class="article-footer-heading">
 					<p class="section-label">Filed under</p>
@@ -143,7 +163,7 @@ const articleStructuredData = [
 					</ul>
 				</div>
 				<div class="article-utilities">
-					<a href="/discussions/">Discuss (soon)</a>
+					<a href="#comments">Discuss</a>
 					<a href="/rss.xml">RSS feed</a>
 					<a href="https://vyasdevgna.online/">More from Devgna Vyas ↗</a>
 				</div>

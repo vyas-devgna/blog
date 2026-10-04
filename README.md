@@ -1,10 +1,18 @@
 # Vyas publication
 
-An Astro publication for `blog.vyasdevgna.online`. Public writing is authored in Markdown or MDX and built to static files; Cloudflare Workers Static Assets serves those files, with the Worker reserved for routes that need server-side work.
+Astro publication and small community platform for `blog.vyasdevgna.online`. Articles remain Markdown/MDX in Git and prerender as static HTML. Auth, profiles, comments, discussions, and moderation use server routes on Cloudflare Workers and Neon PostgreSQL.
 
-## Current state
+## Current production state
 
-The static publication foundation is deployed at `https://blog.vyasdevgna.online`. Neon project `blog` exists in Singapore, Neon Managed Auth is enabled on its `main` branch with the production origin trusted, and its custom SMTP provider is saved with the sender `no-reply@notify.vyasdevgna.online`. Sign-ups remain disabled. The Worker has a pooled `DATABASE_URL` secret and public auth endpoint configured, but no application database client, schema, or auth flow uses them yet. The Resend credential is held by the Neon SMTP configuration and is not stored in this repository or the Worker. Community features and application email flows are not implemented; Turnstile and Web Analytics are not integrated into the site.
+- The current application build is deployed to `https://blog.vyasdevgna.online`.
+- The community schema and nine default categories are applied to Neon `main`.
+- Email/password auth is configured for one-time-code email verification. Neon SMTP accepted a test message.
+- New account creation remains disabled until the Cloudflare Turnstile server secret is installed. The site key is public configuration; the secret is not stored in Git.
+- The moderator account still needs to sign up and verify its email before its application profile can be promoted.
+- In-app notifications are available. Optional community email notifications remain off until `RESEND_API_KEY` is configured on the Worker.
+- Independent off-site backups and a disposable restore drill remain open; see [backup and restore](docs/BACKUPS.md).
+
+This is a deployed setup build, not a completed formal V1 release. Do not create a release tag until the remaining setup and production flows have been verified.
 
 ## Local development
 
@@ -16,29 +24,20 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Validate with `pnpm typecheck`, `pnpm lint`, `pnpm test:unit`, and `pnpm build`.
+Validate with `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build`.
 
 ## Publishing an article
 
-Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`, `publishedAt`, and optional `updatedAt`, `tags`, `featured`, `cover`, and `canonical` front matter. Keep `draft: true` until ready; omit it or set it to `false` to publish. The collection schema checks metadata during the build. Commit the article and deploy after production setup is complete.
+Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`, and `publishedAt`; optional fields include `updatedAt`, `tags`, `featured`, `cover`, and `canonical`. Keep `draft: true` until publication. Article data and assets stay in Git and do not use the community database.
 
 ## Architecture
 
-- Astro 7 with TypeScript and MDX
-- Cloudflare Workers with Static Assets; public article pages are prerendered
-- Neon PostgreSQL and Managed Better Auth are provisioned; the SMTP sender is configured, but no schema or live database client is active yet
-- Resend sending credentials are held by Neon Auth for its SMTP provider; application email flows are not implemented
-- Cloudflare Turnstile and Web Analytics are not integrated into the site
+- Astro 7, TypeScript, and MDX.
+- Cloudflare Workers with Workers Static Assets; public articles are prerendered.
+- Neon PostgreSQL and Neon Managed Auth.
+- Drizzle ORM with migrations in `drizzle/migrations/`.
+- A restricted `blog_runtime` database role is stored as the Worker `DATABASE_URL` secret; the browser never receives it.
+- Signup spam checks use Cloudflare Turnstile with server-side Siteverify validation.
+- Neon SMTP handles verification and password-reset mail; Resend is optional for community reply/moderation email notifications.
 
-## Provider CLI authentication
-
-The project includes Wrangler and the Neon CLI. Sign in locally with:
-
-```sh
-pnpm exec wrangler whoami
-pnpm exec neon me --profile blog-setup
-```
-
-Wrangler credentials are in the OS keyring. The Neon CLI profile `blog-setup` is in the OS keyring and is restricted to the blog project. Do not paste tokens into source files, issues, or chat. The local `.neon` project link is ignored by Git; database credentials were not pulled into `.env`.
-
-See [architecture](docs/ARCHITECTURE.md), [deployment](docs/DEPLOYMENT.md), [backup and restore](docs/BACKUPS.md), [SEO](docs/SEO.md), [moderation](docs/MODERATION.md), and [operations](docs/OPERATIONS.md).
+See [deployment](docs/DEPLOYMENT.md), [operations](docs/OPERATIONS.md), [moderation](docs/MODERATION.md), [backup and restore](docs/BACKUPS.md), and [architecture](docs/ARCHITECTURE.md).

@@ -1,0 +1,21 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+export const prerender = false;
+---
+
+<SiteLayout title="Verify your email" description="Confirm your email address to use the Vyas community." noindex>
+  <section class="page-shell auth-shell">
+    <PageHeader label="Your account" title="Check your email" intro="Enter the verification code sent to your address. Codes expire, and you can request another one below." />
+    <form class="auth-form" data-auth-form data-auth-mode="verify">
+      <label for="verify-email">Email</label>
+      <input id="verify-email" name="email" type="email" autocomplete="email" maxlength="320" required />
+      <label for="verify-code">Verification code</label>
+      <input id="verify-code" name="otp" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="12" required />
+      <p class="form-message" data-form-message role="status"></p>
+      <button class="pill pill-solid" type="submit">Verify email</button>
+      <button class="text-button" type="button" data-resend-code>Send a new code</button>
+    </form>
+  </section>
+  <script src="../scripts/auth.ts"></script>
+</SiteLayout>

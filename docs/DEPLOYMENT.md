@@ -1,22 +1,58 @@
 # Deployment
 
-## Prerequisites
+## Production resources
 
-1. The `vyasdevgna.online` zone is active in the authenticated Cloudflare account; no existing `blog` DNS record was present when checked.
-2. Wrangler is authenticated locally. Keep the credential in the OS keyring; use a project-scoped CI token if CI deployment is later added.
-3. Confirm current Worker quotas before production use.
+- Domain: `blog.vyasdevgna.online` on Cloudflare Workers Static Assets.
+- Worker: `blog`.
+- Neon project: `fancy-silence-20394887`, branch `main`.
+- Auth provider: Neon Managed Auth at the Worker-configured base URL; only `https://blog.vyasdevgna.online` is a trusted origin.
+- `SESSION` binds to the existing Cloudflare KV namespace `blog-session`.
+
+## Worker configuration
+
+Public non-secret variables are in `wrangler.jsonc`: `PUBLIC_SITE_URL`, `NEON_AUTH_BASE_URL`, and the public `TURNSTILE_SITE_KEY`. The Worker secrets are configured separately and must never be added to Git:
+
+- `DATABASE_URL` — Neon `blog_runtime` role, limited to application tables.
+- `NEON_AUTH_COOKIE_SECRET` — Worker-side secure cookie signing secret.
+- `TURNSTILE_SECRET_KEY` — required before signup or new-user posting can pass Siteverify; not yet configured.
+- `RESEND_API_KEY` — optional; enables reply/moderation email notices.
+
+The Neon Auth custom SMTP provider is saved as `no-reply@notify.vyasdevgna.online`. A test message was dispatched successfully. Auth is configured to require email verification and send an OTP, while provider signups remain disabled until the Turnstile Worker secret is installed.
+
+Turnstile is checked server-side on this site's signup route. Neon Auth also exposes a managed auth endpoint; the site challenge is abuse friction for this route, not a network-level restriction on direct requests to that provider.
 
 ## Deploy
 
-`pnpm deploy` builds then deploys the Worker. The Worker is deployed to the `blog.vyasdevgna.online` custom domain. Wrangler config supplies the public Neon Auth base URL, and the pooled `DATABASE_URL` is stored as an encrypted Worker secret. CI currently validates builds only and does not deploy.
+```sh
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm deploy
+```
 
-## Pre-release checklist
+`pnpm deploy` rebuilds and publishes the Worker and static assets. CI currently validates pull requests and pushes to `main`; production deployment is manual. The last setup build was deployed on 2026-10-04. It is not a formal V1 release.
 
-- Provision a Cloudflare Worker by deploying the validated build.
-- Neon sign-ups remain disabled. The sender `no-reply@notify.vyasdevgna.online` is saved in Neon Managed Auth's custom SMTP configuration; end-to-end email delivery has not been tested. The pooled DB URL is provisioned, but no schema or application database client is active yet.
-- Application email flows, Turnstile checks, and Cloudflare Web Analytics are not integrated. Configure `RESEND_API_KEY` or `TURNSTILE_SECRET_KEY` for the Worker only when an implemented application flow needs them.
-- Configure Neon migration credentials and run migrations against the intended environment.
-- Verify email, Turnstile, OAuth redirects (if enabled), analytics, backups, and production smoke tests.
-- Tag and publish a release only after full V1 checks are operational.
+## Enable signup after installing Turnstile
 
-The complete community V1 remains incomplete: application auth routes, database schema, community features, Turnstile integration, analytics, and a tested backup restore flow are not part of the static publication release. The static deployment's root, blog index, discussions page, robots, sitemap, and RSS endpoints returned HTTP 200 after deployment.
+Install the existing widget's secret with Wrangler's hidden prompt:
+
+```sh
+pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --name blog
+```
+
+Then enable email signup on Neon only after the Worker secret is present:
+
+```sh
+pnpm exec neon neon-auth config email-password update \
+  --project-id fancy-silence-20394887 --branch main --profile blog-setup \
+  --enabled true --email-verification-method otp \
+  --require-email-verification true --auto-sign-in-after-verification true \
+  --send-verification-email-on-sign-up true --disable-sign-up false
+```
+
+Verify with `GET /api/community/config` (`signupEnabled: true`) and complete a real signup and email-verification flow before tagging a release.
+
+## Migrations
+
+Migrations are committed under `drizzle/migrations/`. The application schema migration has been applied to Neon `main`; the command is `pnpm db:migrate` with the intended `DATABASE_URL` in the environment. The repository does not contain database credentials. Use a disposable Neon branch for migration and restore checks.

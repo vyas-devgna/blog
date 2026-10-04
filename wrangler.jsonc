@@ -9,7 +9,11 @@
   "vars": {
     "PUBLIC_SITE_URL": "https://blog.vyasdevgna.online",
     "NEON_AUTH_BASE_URL": "https://ep-rough-fire-b3g7govq.neonauth.c-4.ap-southeast-1.aws.neon.tech/neondb/auth",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFNIJ9Pj2xf818cD",
   },
+  "kv_namespaces": [
+    { "binding": "SESSION", "id": "d80510a5a00346fdbadf9375bc24f2b8" },
+  ],
   "assets": { "directory": "./dist", "binding": "ASSETS" },
   "observability": { "enabled": true },
 }

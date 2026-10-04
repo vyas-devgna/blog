@@ -1,0 +1,31 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+export const prerender = false;
+---
+
+<SiteLayout title="Moderation" description="Review community reports and moderation history." noindex>
+  <section class="page-shell moderation-shell" data-moderation>
+    <PageHeader label="Community care" title="Moderation" intro="Review reports, take proportionate action, and leave an audit trail." />
+    <p class="community-status" data-community-status>Checking moderator access…</p>
+    <div class="profile-card" data-moderation-stats></div>
+    <section class="settings-section">
+      <h2>Open reports</h2>
+      <div class="moderation-list" data-report-list></div>
+    </section>
+    <section class="settings-section">
+      <h2>Recent actions</h2>
+      <div class="moderation-list" data-moderation-log></div>
+    </section>
+    <section class="settings-card settings-section">
+      <h2>Member status</h2>
+      <form data-user-search class="settings-section">
+        <label for="moderation-search">Search by username or display name</label>
+        <input id="moderation-search" name="q" minlength="2" maxlength="48" required />
+        <button class="pill pill-glass" type="submit">Search members</button>
+      </form>
+      <div class="moderation-list" data-user-results></div>
+    </section>
+  </section>
+  <script src="../scripts/moderation.ts"></script>
+</SiteLayout>

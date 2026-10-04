@@ -1,16 +1,37 @@
 ---
-import SiteLayout from '../../layouts/SiteLayout.astro';
-import PageHeader from '../../components/PageHeader.astro';
-export const prerender = true;
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+export const prerender = false;
 ---
 
-<SiteLayout title="Discussions" description="A technical community for thoughtful questions and shared work.">
-	<section class="page-shell">
-		<PageHeader label="Community" title="Discussions" intro="A small forum for questions, projects, and considered exchange." />
-		<div class="empty-page-print community-print">
-			<p class="exhibit-label"><b>Coming soon</b><span>A place for thoughtful exchange</span></p>
-			<p>The discussion space is not open yet. Published writing will remain available without an account.</p>
-			<a class="more-link" href="/blog/">Explore the writing</a>
-		</div>
-	</section>
+<SiteLayout title="Discussions" description="A technical community for questions, projects, and considered exchange.">
+  <section class="page-shell discussion-index-shell" data-discussion-index>
+    <PageHeader label="Community" title="Discussions" intro="A small forum for questions, projects, and considered exchange. Read along or sign in to contribute." />
+    <div class="discussion-toolbar">
+      <label for="discussion-category">Browse category</label>
+      <select id="discussion-category" data-category-filter aria-label="Filter discussions by category">
+        <option value="">All categories</option>
+      </select>
+      <a class="pill pill-solid" href="/signup/" data-start-discussion>Start a discussion</a>
+    </div>
+    <form class="discussion-create" data-thread-form hidden>
+      <h2>Start a discussion</h2>
+      <label for="thread-title">Title</label>
+      <input id="thread-title" name="title" minlength="5" maxlength="140" required />
+      <label for="thread-category">Category</label>
+      <select id="thread-category" name="category" required></select>
+      <label for="thread-body">What would you like to discuss?</label>
+      <textarea id="thread-body" name="body" minlength="20" maxlength="10000" rows="6" required></textarea>
+      <div class="challenge-slot" data-challenge-slot hidden></div>
+      <p class="form-message" data-form-message role="status"></p>
+      <button class="pill pill-solid" type="submit">Publish discussion</button>
+    </form>
+    <p class="community-auth-prompt" data-community-prompt><a href="/login/?returnTo=%2Fdiscussions%2F">Sign in</a> or <a href="/signup/">create an account</a> to start a discussion.</p>
+    <p class="community-status" data-community-status>Discussions are loading…</p>
+    <div class="discussion-list" data-discussion-list aria-live="polite"></div>
+    <div class="community-pagination" data-discussion-pagination hidden>
+      <button type="button" data-page-prev>Previous</button><span data-page-label></span><button type="button" data-page-next>Next</button>
+    </div>
+  </section>
+  <script src="../../scripts/community.ts"></script>
 </SiteLayout>
