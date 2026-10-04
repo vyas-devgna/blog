@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+	<defs>
+		<linearGradient id="ground" x1="0" y1="0" x2="1" y2="1">
+			<stop stop-color="#f5f5f7" />
+			<stop offset="1" stop-color="#fbfbfd" />
+		</linearGradient>
+		<radialGradient id="blue"><stop stop-color="#2a3f9e" stop-opacity=".72" /><stop offset="1" stop-color="#2a3f9e" stop-opacity="0" /></radialGradient>
+		<radialGradient id="ochre"><stop stop-color="#e7a73f" stop-opacity=".72" /><stop offset="1" stop-color="#e7a73f" stop-opacity="0" /></radialGradient>
+		<radialGradient id="red"><stop stop-color="#e24a2c" stop-opacity=".5" /><stop offset="1" stop-color="#e24a2c" stop-opacity="0" /></radialGradient>
+		<filter id="soft"><feGaussianBlur stdDeviation="24" /></filter>
+	</defs>
+	<rect width="1200" height="630" fill="url(#ground)" />
+	<g filter="url(#soft)" opacity=".8">
+		<ellipse cx="920" cy="170" rx="280" ry="190" fill="url(#ochre)" />
+		<ellipse cx="1050" cy="520" rx="300" ry="230" fill="url(#blue)" />
+		<ellipse cx="770" cy="510" rx="230" ry="160" fill="url(#red)" />
+	</g>
+	<path d="M625 0H1200V630H760c90-90 55-200-35-235-110-42-18-155-100-395Z" fill="#fbfbfd" fill-opacity=".48" />
+	<text x="112" y="335" fill="#1d1d1f" font-family="DejaVu Sans, Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-6">Vyas</text>
+	<text x="116" y="410" fill="#424245" font-family="DejaVu Sans, Arial, sans-serif" font-size="32">Notes on systems, software &amp; research.</text>
+	<text x="116" y="520" fill="#6e6e73" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" letter-spacing="1.5">INDEPENDENT WRITING BY DEVGNA VYAS</text>
+	<path d="M116 474h180" stroke="#0071e3" stroke-width="4" stroke-linecap="round" />
+</svg>

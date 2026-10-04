@@ -4,7 +4,7 @@ An Astro publication for `blog.vyasdevgna.online`. Public writing is authored in
 
 ## Current state
 
-The static publication foundation is deployed at `https://blog.vyasdevgna.online`. Neon project `blog` exists in Singapore, and Neon Managed Auth is enabled on its `main` branch with the production origin trusted. The Worker has the pooled `DATABASE_URL` secret and public auth endpoint configured, but no application database client, schema, or auth flow uses them yet. Sign-ups are disabled until a transactional email sender is configured. Community features, Resend, Turnstile, and analytics still need setup.
+The static publication foundation is deployed at `https://blog.vyasdevgna.online`. Neon project `blog` exists in Singapore, Neon Managed Auth is enabled on its `main` branch with the production origin trusted, and its custom SMTP provider is saved with the sender `no-reply@notify.vyasdevgna.online`. Sign-ups remain disabled. The Worker has a pooled `DATABASE_URL` secret and public auth endpoint configured, but no application database client, schema, or auth flow uses them yet. The Resend credential is held by the Neon SMTP configuration and is not stored in this repository or the Worker. Community features and application email flows are not implemented; Turnstile and Web Analytics are not integrated into the site.
 
 ## Local development
 
@@ -26,8 +26,9 @@ Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`
 
 - Astro 7 with TypeScript and MDX
 - Cloudflare Workers with Static Assets; public article pages are prerendered
-- Neon PostgreSQL and Managed Better Auth are provisioned; the Worker secret and public auth URL are configured, but no schema or live database client is active yet
-- Cloudflare Analytics, Turnstile, and Resend are not configured
+- Neon PostgreSQL and Managed Better Auth are provisioned; the SMTP sender is configured, but no schema or live database client is active yet
+- Resend sending credentials are held by Neon Auth for its SMTP provider; application email flows are not implemented
+- Cloudflare Turnstile and Web Analytics are not integrated into the site
 
 ## Provider CLI authentication
 

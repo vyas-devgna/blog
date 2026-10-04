@@ -1,24 +1,173 @@
 ---
 import { getCollection, render } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { coverForSlug } from '../../lib/cover';
+import { getReadingTime, getPublishedPosts } from '../../lib/posts';
 import { topicSlug } from '../../lib/topics';
 
 export const prerender = true;
+
 export async function getStaticPaths() {
-	return (await getCollection('blog', ({ data }) => !data.draft)).map((post) => ({ params: { slug: post.id }, props: { post } }));
+	return (await getCollection('blog', ({ data }) => !data.draft)).map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
 }
+
 const { post } = Astro.props;
-const { Content } = await render(post);
-const canonical = post.data.canonical ?? new URL(`/blog/${post.id}/`, Astro.site).toString();
+const { Content, headings } = await render(post);
+const canonical = post.data.canonical ?? new URL('/blog/' + post.id + '/', Astro.site).toString();
+const posts = await getPublishedPosts();
+const postIndex = posts.findIndex((entry) => entry.id === post.id);
+const previousPost = posts[postIndex + 1];
+const nextPost = posts[postIndex - 1];
+const readingTime = getReadingTime(post.body ?? '');
+const cover = post.data.cover ?? coverForSlug(post.id);
+const articleNumber = String(postIndex + 1).padStart(2, '0');
+const firstTag = post.data.tags[0] ?? 'Writing';
+const tocHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const published = new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(
+	post.data.publishedAt,
+);
+const modified = post.data.updatedAt ?? post.data.publishedAt;
+const updated = new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(
+	modified,
+);
+const ogImage = new URL('/og.png', Astro.site).toString();
+const articleStructuredData = [
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		headline: post.data.title,
+		description: post.data.description,
+		datePublished: post.data.publishedAt.toISOString(),
+		dateModified: modified.toISOString(),
+		author: {
+			'@type': 'Person',
+			name: 'Devgna Vyas',
+			url: 'https://vyasdevgna.online/',
+			image: 'https://blog.vyasdevgna.online/vd-logo.png',
+		},
+		image: [ogImage],
+		mainEntityOfPage: canonical,
+		publisher: {
+			'@type': 'Person',
+			name: 'Devgna Vyas',
+			url: 'https://vyasdevgna.online/',
+		},
+		keywords: post.data.tags,
+	},
+	{
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{ '@type': 'ListItem', position: 1, name: 'Home', item: 'https://blog.vyasdevgna.online/' },
+			{ '@type': 'ListItem', position: 2, name: 'Writing', item: 'https://blog.vyasdevgna.online/blog/' },
+			{ '@type': 'ListItem', position: 3, name: post.data.title, item: canonical },
+		],
+	},
+];
 ---
 
-<SiteLayout title={post.data.title} description={post.data.description} canonical={canonical}>
-	<article class="article" itemscope itemtype="https://schema.org/BlogPosting">
-		<p class="article-meta"><time itemprop="datePublished" datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en', { dateStyle: 'long' })}</time><span aria-hidden="true">·</span><span>Vyas</span></p>
-		<h1 itemprop="headline">{post.data.title}</h1>
-		<p class="article-description" itemprop="description">{post.data.description}</p>
-		{post.data.tags.length > 0 && <ul class="tag-list" aria-label="Topics">{post.data.tags.map((tag) => <li><a href={`/topics/${topicSlug(tag)}/`}>{tag}</a></li>)}</ul>}
-		<div class="article-body" itemprop="articleBody"><Content /></div>
-		{post.data.updatedAt && <meta itemprop="dateModified" content={post.data.updatedAt.toISOString()} />}
-	</article>
+<SiteLayout
+	title={post.data.title}
+	description={post.data.description}
+	canonical={canonical}
+	ogType="article"
+	publishedTime={post.data.publishedAt}
+	modifiedTime={modified}
+	jsonLd={articleStructuredData}
+>
+	<div class="reading-progress" aria-hidden="true"><span></span></div>
+	<div class="article-shell">
+		{tocHeadings.length > 0 && (
+			<aside class="toc-rail">
+				<nav aria-label="On this page">
+					<p>On this page</p>
+					<ul>
+						{tocHeadings.map((heading) => (
+							<li class:list={{ 'toc-subheading': heading.depth === 3 }}>
+								<a href={'#' + heading.slug}>{heading.text}</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			</aside>
+		)}
+		<article class="article" itemscope itemtype="https://schema.org/BlogPosting">
+			<header class="article-header">
+				<p class="article-label">
+					<b>No. {articleNumber}</b>
+					<time itemprop="datePublished" datetime={post.data.publishedAt.toISOString()}>{published}</time>
+					<span aria-hidden="true">·</span>
+					<span>{readingTime} min read</span>
+				</p>
+				<h1 itemprop="headline">{post.data.title}</h1>
+				<p class="article-intro" itemprop="description">{post.data.description}</p>
+				<div class="article-byline">
+					<img src="/vd-logo.png" alt="" width="36" height="36" />
+					<p>By <a href="https://vyasdevgna.online/">Devgna Vyas</a></p>
+				</div>
+				<figure class="article-cover">
+					<div class="cover-mat">
+						<img src={cover} alt="" width="1200" height="760" fetchpriority="high" />
+					</div>
+					<figcaption><span>Cover artwork</span><span>{firstTag}</span></figcaption>
+				</figure>
+			</header>
+
+			{tocHeadings.length > 0 && (
+				<details class="toc-mobile">
+					<summary>On this page</summary>
+					<nav aria-label="Article contents">
+						<ul>
+							{tocHeadings.map((heading) => (
+								<li class:list={{ 'toc-subheading': heading.depth === 3 }}>
+									<a href={'#' + heading.slug}>{heading.text}</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+				</details>
+			)}
+
+			<div class="article-body" itemprop="articleBody"><Content /></div>
+
+			<footer class="article-footer">
+				<div class="article-footer-heading">
+					<p class="section-label">Filed under</p>
+					<ul class="card-tags" aria-label="Topics">
+						{post.data.tags.map((tag) => (
+							<li><a class="topic-chip" href={'/topics/' + topicSlug(tag) + '/'}>{tag}</a></li>
+						))}
+					</ul>
+				</div>
+				<div class="article-utilities">
+					<a href="/discussions/">Discuss (soon)</a>
+					<a href="/rss.xml">RSS feed</a>
+					<a href="https://vyasdevgna.online/">More from Devgna Vyas ↗</a>
+				</div>
+				<small>Updated {updated}</small>
+			</footer>
+
+			{(previousPost || nextPost) && (
+				<nav class="post-navigation" aria-label="More writing">
+					{previousPost && (
+						<a href={'/blog/' + previousPost.id + '/'} class="post-nav-tile">
+							<span>Previous essay</span>
+							<strong>{previousPost.data.title}</strong>
+						</a>
+					)}
+					{nextPost && (
+						<a href={'/blog/' + nextPost.id + '/'} class="post-nav-tile post-nav-next">
+							<span>Next essay</span>
+							<strong>{nextPost.data.title}</strong>
+						</a>
+					)}
+				</nav>
+			)}
+		</article>
+	</div>
+
+	<script is:inline src="/scripts/article.js"></script>
 </SiteLayout>

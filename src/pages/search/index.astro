@@ -1,34 +1,109 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getPublishedPosts } from '../../lib/posts';
+import PageHeader from '../../components/PageHeader.astro';
+import { getPublishedPosts, getReadingTime } from '../../lib/posts';
 export const prerender = true;
 const posts = await getPublishedPosts();
-const searchIndex = posts.map(({ id, data }) => ({ id, title: data.title, description: data.description, tags: data.tags }));
 ---
 
 <SiteLayout title="Search" description="Search articles on this site.">
-	<section class="page-shell">
-		<header class="page-heading"><p class="eyebrow">The archive</p><h1 class="page-title">Search</h1><label for="article-search">Search articles</label><input id="article-search" type="search" autocomplete="off" placeholder="Try a title or topic" /></header>
-		<ul id="search-results" class="search-results"></ul>
-		<p id="search-empty" class="empty-note">Enter a word to search the article archive.{posts.length === 0 && ' No articles have been published yet.'}</p>
+	<section class="page-shell search-page">
+		<PageHeader label="The archive" title="Search" intro="Look for an idea, a subject, or a phrase across the writing." />
+		<div class="search-control">
+			<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+				<circle cx="10.8" cy="10.8" r="6.5" />
+				<path d="m16 16 4.5 4.5" />
+			</svg>
+			<label class="visually-hidden" for="article-search">Search all writing</label>
+			<input id="article-search" type="search" autocomplete="off" placeholder="Try a title or topic" aria-describedby="search-help search-status" />
+			<span class="search-shortcut" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
+		</div>
+		<p id="search-help" class="search-help">Press <kbd>/</kbd> or <kbd>⌘ K</kbd> to focus search.</p>
+		<p id="search-status" class="visually-hidden" role="status" aria-live="polite">
+			{posts.length ? `Showing all ${posts.length} ${posts.length === 1 ? 'essay' : 'essays'}.` : 'No essays are published yet.'}
+		</p>
+		<ul id="search-results" class="search-results" aria-label="Writing archive">
+			{posts.map((post) => {
+				const published = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(post.data.publishedAt);
+				const firstTag = post.data.tags[0] ?? 'Writing';
+				return (
+					<li>
+						<a
+							class="search-result-card"
+							href={'/blog/' + post.id + '/'}
+							data-title={post.data.title}
+							data-description={post.data.description}
+							data-search={[post.data.title, post.data.description, ...post.data.tags].join(' ').toLocaleLowerCase()}
+						>
+							<span class="article-label"><b>{firstTag}</b><time datetime={post.data.publishedAt.toISOString()}>{published}</time><span aria-hidden="true">·</span><span>{getReadingTime(post.body ?? '')} min read</span></span>
+							<strong class="search-result-title">{post.data.title}</strong>
+							<span class="search-result-description">{post.data.description}</span>
+						</a>
+						</li>
+					);
+			})}
+		</ul>
+		<p id="search-empty" class="empty-page-print" hidden>
+			<b>No matching essays</b><span>Try another word or browse all writing.</span>
+			<a class="more-link" href="/blog/">Browse writing</a>
+		</p>
+		{posts.length === 0 && (
+			<div class="empty-page-print search-no-content">
+				<p class="exhibit-label"><b>Exhibit 00</b><span>The archive is ready for its first essay</span></p>
+				<p>When writing is published, it will be searchable here.</p>
+			</div>
+		)}
 	</section>
-	<script define:vars={{ searchIndex }}>
-		const input = document.querySelector('#article-search');
-		const results = document.querySelector('#search-results');
-		const empty = document.querySelector('#search-empty');
-		input?.addEventListener('input', () => {
-			const query = input.value.trim().toLocaleLowerCase();
-			const matches = query ? searchIndex.filter((post) => `${post.title} ${post.description} ${post.tags.join(' ')}`.toLocaleLowerCase().includes(query)) : [];
-			results.replaceChildren(...matches.map((post) => {
-				const item = document.createElement('li');
-				const link = document.createElement('a');
-				link.href = `/blog/${encodeURIComponent(post.id)}/`;
-				link.textContent = post.title;
-				item.append(link);
-				return item;
-			}));
-			empty.hidden = matches.length > 0;
-			empty.textContent = query ? 'No matching articles.' : 'Enter a word to search the article archive.';
+	<script>
+		const input = document.querySelector<HTMLInputElement>('#article-search');
+		const cards = [...document.querySelectorAll<HTMLAnchorElement>('.search-result-card')];
+		const empty = document.querySelector<HTMLElement>('#search-empty');
+		const status = document.querySelector<HTMLElement>('#search-status');
+
+		function appendHighlight(target: HTMLElement | null, value: string, query: string) {
+			if (!target) return;
+			target.replaceChildren();
+			const lowerValue = value.toLocaleLowerCase();
+			const lowerQuery = query.toLocaleLowerCase();
+			let position = 0;
+			let match = lowerValue.indexOf(lowerQuery, position);
+			while (match !== -1) {
+				target.append(document.createTextNode(value.slice(position, match)));
+				const mark = document.createElement('mark');
+				mark.textContent = value.slice(match, match + query.length);
+				target.append(mark);
+				position = match + query.length;
+				match = lowerValue.indexOf(lowerQuery, position);
+			}
+			target.append(document.createTextNode(value.slice(position)));
+		}
+
+		function updateSearch() {
+			if (!input) return;
+			const query = input.value.trim();
+			let visible = 0;
+			for (const card of cards) {
+				const matches = !query || (card.dataset.search ?? '').includes(query.toLocaleLowerCase());
+				if (card.parentElement) card.parentElement.hidden = !matches;
+				if (matches) visible += 1;
+				appendHighlight(card.querySelector<HTMLElement>('.search-result-title'), card.dataset.title ?? '', query);
+				appendHighlight(card.querySelector<HTMLElement>('.search-result-description'), card.dataset.description ?? '', query);
+			}
+			if (empty) empty.hidden = !query || visible > 0;
+			if (status) status.textContent = query
+				? `${visible} ${visible === 1 ? 'essay' : 'essays'} found for “${query}”.`
+				: cards.length ? `Showing all ${cards.length} ${cards.length === 1 ? 'essay' : 'essays'}.` : 'No essays are published yet.';
+		}
+
+		input?.addEventListener('input', updateSearch);
+		document.addEventListener('keydown', (event: KeyboardEvent) => {
+			const target = event.target;
+			if (event.key === '/' && target === input) return;
+			if (target instanceof HTMLElement && target !== input && (target.isContentEditable || target.matches('input, textarea, select'))) return;
+			const focusShortcut = event.key === '/' || (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey));
+			if (!focusShortcut || event.altKey || !input) return;
+			event.preventDefault();
+			input.focus();
 		});
 	</script>
 </SiteLayout>

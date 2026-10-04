@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+export { getReadingTime } from "./reading-time";
 
 export async function getPublishedPosts() {
   return (await getCollection("blog", ({ data }) => !data.draft)).sort(

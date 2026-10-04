@@ -1,21 +1,27 @@
 ---
-import { getCollection } from 'astro:content';
-import SiteLayout from '../../layouts/SiteLayout.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getPublishedPosts } from '../../lib/posts';
 import { topicSlug } from '../../lib/topics';
 
 export const prerender = true;
+
 export async function getStaticPaths() {
-	const posts = await getCollection('blog', ({ data }) => !data.draft);
+	const posts = await getPublishedPosts();
 	const topics = [...new Set(posts.flatMap(({ data }) => data.tags))];
-	return topics.map((topic) => ({ params: { topic: topicSlug(topic) }, props: { topic, posts: posts.filter(({ data }) => data.tags.includes(topic)) } }));
+	return topics.map((topic) => ({
+		params: { topic: topicSlug(topic) },
+		props: { topic, posts: posts.filter(({ data }) => data.tags.includes(topic)) },
+	}));
 }
 const { topic, posts } = Astro.props;
 ---
 
 <SiteLayout title={`Topic: ${topic}`} description={`Articles filed under ${topic}.`}>
 	<section class="page-shell">
-		<header class="page-heading"><p class="eyebrow">Topic</p><h1 class="page-title">{topic}</h1></header>
+		<PageHeader label="Browse the archive" title={topic} intro={`Essays filed under ${topic}.`} />
+		<p class="result-count">{posts.length} {posts.length === 1 ? 'essay' : 'essays'}</p>
 		<div class="article-list">{posts.map((post) => <ArticleCard post={post} />)}</div>
 	</section>
 </SiteLayout>

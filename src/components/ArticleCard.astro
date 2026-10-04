@@ -1,14 +1,44 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { coverForSlug } from '../lib/cover';
+import { getReadingTime } from '../lib/posts';
 import { topicSlug } from '../lib/topics';
 
-interface Props { post: CollectionEntry<'blog'> }
+interface Props {
+	post: CollectionEntry<'blog'>;
+}
+
 const { post } = Astro.props;
+const cover = post.data.cover ?? coverForSlug(post.id);
+const readingTime = getReadingTime(post.body ?? '');
+const firstTag = post.data.tags[0] ?? 'Writing';
+const published = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(
+	post.data.publishedAt,
+);
 ---
 
 <article class="article-card">
-	<div class="article-meta"><time datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en', { dateStyle: 'medium' })}</time><span aria-hidden="true">·</span><span>{post.data.tags.slice(0, 2).join(' / ') || 'Notes'}</span></div>
-	<h2><a href={`/blog/${post.id}/`}>{post.data.title}</a></h2>
-	<p>{post.data.description}</p>
-	{post.data.tags.length > 0 && <ul class="tag-list" aria-label="Topics">{post.data.tags.map((tag) => <li><a href={`/topics/${topicSlug(tag)}/`}>{tag}</a></li>)}</ul>}
+	<a class="article-card-link" href={'/blog/' + post.id + '/'}>
+		<div class="card-cover">
+			<img src={cover} alt="" width="1200" height="760" loading="lazy" decoding="async" />
+		</div>
+		<div class="card-copy">
+			<p class="article-label">
+				<b>{firstTag}</b>
+				<time datetime={post.data.publishedAt.toISOString()}>{published}</time>
+				<span aria-hidden="true">·</span>
+				<span>{readingTime} min read</span>
+			</p>
+			<h2>{post.data.title}</h2>
+			<p class="card-description">{post.data.description}</p>
+			<span class="card-more" aria-hidden="true">Read article <span>↗</span></span>
+		</div>
+	</a>
+	{post.data.tags.length > 0 && (
+		<ul class="card-tags" aria-label="Topics">
+			{post.data.tags.map((tag) => (
+				<li><a class="topic-chip" href={'/topics/' + topicSlug(tag) + '/'}>{tag}</a></li>
+			))}
+		</ul>
+	)}
 </article>

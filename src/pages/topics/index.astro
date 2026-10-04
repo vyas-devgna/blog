@@ -1,0 +1,37 @@
+---
+import PageHeader from '../../components/PageHeader.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getPublishedPosts, getTopics } from '../../lib/posts';
+import { topicSlug } from '../../lib/topics';
+
+export const prerender = true;
+const posts = await getPublishedPosts();
+const topics = getTopics(posts);
+---
+
+<SiteLayout title="Topics" description="Browse writing by topic.">
+	<section class="page-shell">
+		<PageHeader label="The index" title="Topics" intro="Follow a subject through the archive." />
+		{topics.length ? (
+			<ul class="topic-index">
+				{topics.map((topic) => {
+					const count = posts.filter((post) => post.data.tags.includes(topic)).length;
+					return (
+						<li>
+							<a class="topic-index-card" href={'/topics/' + topicSlug(topic) + '/'}>
+								<span>{topic}</span>
+								<small>{count} {count === 1 ? 'essay' : 'essays'}</small>
+							</a>
+						</li>
+					);
+				})}
+			</ul>
+		) : (
+			<div class="empty-page-print">
+				<p class="exhibit-label"><b>Exhibit 00</b><span>Subjects will appear with the first essays</span></p>
+				<p>New writing will be collected here as it joins the archive.</p>
+				<a class="more-link" href="/rss.xml">Follow the RSS feed</a>
+			</div>
+		)}
+	</section>
+</SiteLayout>
