@@ -12,7 +12,7 @@ const MAX_PAGES = 40;
 const MAX_ASSETS = 80;
 
 const PRECACHE = [
-  "/offline.html",
+  "/offline",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/apple-touch-icon.png",
@@ -89,9 +89,7 @@ self.addEventListener("fetch", (event) => {
             !personal && PUBLIC_PAGE.test(url.pathname)
               ? await caches.match(request)
               : undefined;
-          return (
-            cached || (await caches.match("/offline.html")) || Response.error()
-          );
+          return cached || (await caches.match("/offline")) || Response.error();
         }
       })(),
     );
