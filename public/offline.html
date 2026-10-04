@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Offline · Vyas</title>
+    <link rel="icon" href="/icons/favicon-32.png" type="image/png" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fbfbfd;
+        --ink: #1d1d1f;
+        --muted: #6e6e73;
+        --line: rgb(0 0 0 / 0.12);
+        --blue: #0071e3;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #000;
+          --ink: #f5f5f7;
+          --muted: #a1a1a6;
+          --line: rgb(255 255 255 / 0.16);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          400 17px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "SF Pro Text",
+          Inter,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        letter-spacing: -0.022em;
+        text-align: center;
+      }
+      main {
+        max-width: 520px;
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+      }
+      .mark {
+        width: 88px;
+        height: 88px;
+        border-radius: 22px;
+        box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.5);
+      }
+      p.label {
+        margin: 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 8vw, 3.4rem);
+        line-height: 1.04;
+        letter-spacing: -0.045em;
+        font-weight: 600;
+        text-wrap: balance;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+        text-wrap: pretty;
+      }
+      a.pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 48px;
+        padding: 0 24px;
+        border-radius: 980px;
+        background: var(--blue);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 450;
+        transition: scale 0.15s;
+      }
+      a.pill:active {
+        scale: 0.97;
+      }
+      a.pill:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img
+        class="mark"
+        src="/icons/icon-192.png"
+        width="88"
+        height="88"
+        alt=""
+      />
+      <p class="label">You’re offline</p>
+      <h1>The page you asked for isn’t saved yet.</h1>
+      <p>
+        Essays you’ve already opened stay available without a connection.
+        Reconnect to read anything new.
+      </p>
+      <a
+        class="pill"
+        href="/"
+        onclick="
+          location.reload();
+          return false;
+        "
+        >Try again</a
+      >
+    </main>
+  </body>
+</html>

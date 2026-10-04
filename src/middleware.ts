@@ -11,6 +11,7 @@ const csp = [
   "font-src 'self' data:",
   "img-src 'self' data: https:",
   "connect-src 'self' https://challenges.cloudflare.com",
+  "worker-src 'self'",
   "frame-src https://challenges.cloudflare.com",
   "upgrade-insecure-requests",
 ].join("; ");

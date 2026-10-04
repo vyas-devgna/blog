@@ -43,3 +43,58 @@ describe("getReadingTime", () => {
     expect(getReadingTime("word ".repeat(231))).toBe(2);
   });
 });
+
+import { buildFeed, toPostSummary } from "../../src/lib/post-summary";
+
+const entry = (
+  id: string,
+  day: number,
+  featured = false,
+  tags = ["Notes"],
+) => ({
+  id,
+  body: "word ".repeat(460),
+  data: {
+    title: `Post ${id}`,
+    description: "d",
+    publishedAt: new Date(Date.UTC(2026, 9, day)),
+    tags,
+    featured,
+  },
+});
+
+describe("post feed for other sites", () => {
+  it("maps an entry to an absolute URL, reading time and a generated cover", () => {
+    const summary = toPostSummary(entry("a", 1), "https://blog.example.com");
+    expect(summary.url).toBe("https://blog.example.com/blog/a/");
+    expect(summary.readingTime).toBe(2);
+    expect(summary.cover.startsWith("data:image/svg+xml,")).toBe(true);
+  });
+
+  it("sorts newest first and keeps only featured posts in the best-of shelf", () => {
+    const feed = buildFeed(
+      [entry("old", 1, true), entry("new", 9), entry("mid", 5, true)],
+      "https://blog.example.com",
+    );
+    expect(feed.recent.map((p) => p.slug)).toEqual(["new", "mid", "old"]);
+    expect(feed.featured.map((p) => p.slug)).toEqual(["mid", "old"]);
+    expect(feed.count).toBe(3);
+  });
+
+  it("returns empty shelves when nothing is published", () => {
+    expect(buildFeed([], "https://blog.example.com")).toEqual({
+      count: 0,
+      featured: [],
+      recent: [],
+    });
+  });
+
+  it("caps each shelf", () => {
+    const many = Array.from({ length: 12 }, (_, i) =>
+      entry(`p${i}`, i + 1, true),
+    );
+    const feed = buildFeed(many, "https://blog.example.com");
+    expect(feed.featured).toHaveLength(3);
+    expect(feed.recent).toHaveLength(6);
+  });
+});

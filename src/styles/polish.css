@@ -1,0 +1,725 @@
+/* ==========================================================================
+   Vyas — design system v2 (controls, micro-interactions, PWA)
+   Loaded after global.css. One set of states for every interactive element:
+   rest → hover (tint / lift) → active (press .97) → focus-visible (blue ring)
+   → pending (spinner) → disabled (45%).
+   ========================================================================== */
+
+:root {
+  --ring: color-mix(in srgb, var(--primary) 24%, transparent);
+  --danger: #d92d20;
+  --ok: #1f9d55;
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+:root[data-theme="dark"] {
+  --danger: #ff6b5e;
+  --ok: #30d158;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --danger: #ff6b5e;
+    --ok: #30d158;
+  }
+}
+
+/* ---------- page-to-page crossfade (progressive; no JS) ---------- */
+@view-transition {
+  navigation: auto;
+}
+.site-header {
+  view-transition-name: site-header;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-group(site-header) {
+  animation: none;
+}
+
+/* ---------- one focus ring ---------- */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.pill:focus-visible,
+.topic-chip:focus-visible,
+.theme-toggle:focus-visible,
+.menu-toggle:focus-visible,
+.google-sign-in:focus-visible {
+  border-radius: 980px;
+}
+::selection {
+  background: color-mix(in srgb, var(--primary) 26%, transparent);
+}
+
+/* ---------- text fields ---------- */
+:is(
+    .auth-form,
+    .community-form,
+    .settings-card,
+    .moderation-card,
+    .discussion-create,
+    .discussion-toolbar,
+    form
+  )
+  :is(
+    input:not(
+      [type="checkbox"],
+      [type="radio"],
+      [type="hidden"],
+      [type="submit"]
+    ),
+    select,
+    textarea
+  ) {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  letter-spacing: -0.01em;
+  caret-color: var(--primary);
+  transition:
+    border-color 0.25s var(--ease),
+    box-shadow 0.3s var(--ease),
+    background-color 0.25s var(--ease);
+}
+:is(
+    .auth-form,
+    .community-form,
+    .settings-card,
+    .moderation-card,
+    .discussion-create,
+    .discussion-toolbar,
+    form
+  )
+  :is(input, select, textarea):hover:not(:disabled, :focus) {
+  border-color: color-mix(in srgb, var(--ink) 34%, transparent);
+}
+:is(
+    .auth-form,
+    .community-form,
+    .settings-card,
+    .moderation-card,
+    .discussion-create,
+    .discussion-toolbar,
+    form
+  )
+  :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+:is(input, textarea)::placeholder {
+  color: var(--soft);
+  opacity: 1;
+}
+:is(input, select, textarea):disabled,
+input[readonly] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--surface);
+}
+:is(input, textarea):user-invalid {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 16%, transparent) !important;
+}
+input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 100px var(--surface) inset;
+}
+textarea {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.55;
+}
+select {
+  padding-right: 44px !important;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%236e6e73' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='m1 1.5 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+.auth-form label,
+.community-form label,
+.settings-card label,
+.moderation-card label,
+.discussion-create label,
+.discussion-toolbar label {
+  margin-top: 4px;
+}
+.discussion-toolbar {
+  align-items: center;
+}
+.discussion-toolbar select[data-category-filter] {
+  width: auto;
+  min-width: 220px;
+}
+
+/* password reveal (added by polish.js) */
+.field-wrap {
+  position: relative;
+  display: block;
+}
+.field-wrap input {
+  padding-right: 74px !important;
+}
+.field-reveal {
+  border: 0;
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  translate: 0 -50%;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 980px;
+  background: transparent;
+  color: var(--link);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background-color 0.25s,
+    scale 0.15s var(--ease);
+}
+.field-reveal:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.field-reveal:active {
+  scale: 0.94;
+}
+.field-count {
+  justify-self: end;
+  margin-top: -6px;
+  color: var(--soft);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s;
+}
+.field-count[data-near] {
+  color: var(--vermilion);
+}
+
+/* ---------- checkboxes & radios ---------- */
+.settings-inline,
+label:has(> input[type="checkbox"]),
+label:has(> input[type="radio"]) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 450;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 1.5px solid var(--line-2);
+  background: var(--bg);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.25s,
+    scale 0.15s var(--ease);
+}
+input[type="checkbox"] {
+  border-radius: 7px;
+}
+input[type="radio"] {
+  border-radius: 50%;
+}
+input[type="checkbox"]:active,
+input[type="radio"]:active {
+  scale: 0.9;
+}
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+input[type="checkbox"]::after {
+  content: "";
+  width: 11px;
+  height: 6px;
+  border: 2px solid #fff;
+  border-top: 0;
+  border-right: 0;
+  rotate: -45deg;
+  translate: 0 -1px;
+  scale: 0;
+  transition: scale 0.2s var(--ease-out);
+}
+input[type="radio"]::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  scale: 0;
+  transition: scale 0.2s var(--ease-out);
+}
+input[type="checkbox"]:checked::after,
+input[type="radio"]:checked::after {
+  scale: 1;
+}
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
+}
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- buttons ---------- */
+.pill {
+  position: relative;
+  overflow: hidden;
+  gap: 8px;
+  cursor: pointer;
+}
+.pill-solid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgb(255 255 255 / 0.34) 50%,
+    transparent 65%
+  );
+  translate: -130% 0;
+  transition: translate 0.9s var(--ease-out);
+}
+@media (hover: hover) {
+  .pill-solid:hover::after {
+    translate: 130% 0;
+  }
+}
+.pill:disabled,
+.pill[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.pill-line {
+  background: transparent;
+  color: var(--link);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.pill-line:hover {
+  background: var(--link);
+  color: var(--bg);
+  box-shadow: none;
+}
+.pill-danger {
+  background: transparent;
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.pill-danger:hover {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: none;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* pending submit: spinner while a request is in flight (set by polish.js) */
+.pill[data-pending]:disabled {
+  opacity: 0.85;
+}
+.pill[data-pending]::before {
+  content: "";
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Google sign-in: the one button that had no styles at all */
+.social-auth {
+  display: grid;
+  gap: 10px;
+  max-width: 580px;
+}
+.google-sign-in {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 980px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px var(--line-2),
+    0 1px 2px rgb(0 0 0 / 0.04);
+  transition:
+    box-shadow 0.25s var(--ease),
+    background-color 0.25s var(--ease),
+    translate 0.3s var(--ease-out),
+    scale 0.15s var(--ease);
+}
+.google-sign-in svg {
+  flex: none;
+}
+@media (hover: hover) {
+  .google-sign-in:hover:not(:disabled) {
+    background: var(--surface);
+    translate: 0 -1px;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent),
+      0 8px 20px -12px rgb(0 0 0 / 0.35);
+  }
+}
+.google-sign-in:active:not(:disabled) {
+  scale: 0.98;
+}
+.google-sign-in:disabled {
+  opacity: 0.5;
+}
+.auth-separator {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 0;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+/* text-style buttons and links */
+.text-button {
+  border-radius: 8px;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.text-button:hover {
+  text-decoration-color: currentColor;
+}
+.text-button:active {
+  opacity: 0.7;
+}
+
+/* toggle buttons (like / save / follow) read as on/off */
+.discussion-toolbar button[aria-pressed="true"],
+[data-thread-actions] button[aria-pressed="true"],
+[data-thread-actions] button.is-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--link);
+}
+.community-more,
+.community-pagination button,
+.moderation-actions button,
+.discussion-toolbar button,
+.community-item-actions button {
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background-color 0.2s,
+    scale 0.15s var(--ease);
+}
+.community-more:active:not(:disabled),
+.community-pagination button:active:not(:disabled),
+.moderation-actions button:active:not(:disabled),
+.discussion-toolbar button:active:not(:disabled),
+.community-item-actions button:active:not(:disabled) {
+  scale: 0.95;
+}
+.community-more:disabled,
+.community-pagination button:disabled,
+.moderation-actions button:disabled,
+.discussion-toolbar button:disabled,
+.community-item-actions button:disabled {
+  opacity: 0.4;
+}
+
+/* messages */
+.form-message {
+  transition: color 0.2s;
+}
+.form-message:not(:empty) {
+  animation: message-in 0.35s var(--ease-out);
+}
+@keyframes message-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
+/* account menu panel + theme toggle press feedback */
+.theme-toggle,
+.menu-toggle,
+.account-menu summary {
+  transition:
+    background-color 0.25s,
+    scale 0.15s var(--ease);
+}
+.theme-toggle:active,
+.menu-toggle:active,
+.account-menu summary:active {
+  scale: 0.92;
+}
+.account-menu-panel {
+  animation: panel-in 0.28s var(--ease-out);
+  transform-origin: top right;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+    translate: 0 -4px;
+  }
+}
+.account-menu-panel button {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+.account-menu-panel button:hover,
+.account-menu-panel a:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+/* ---------- pointer spotlight ---------- */
+.spot {
+  position: relative;
+}
+.spot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+  background: radial-gradient(
+    380px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.42),
+    transparent 62%
+  );
+  mix-blend-mode: soft-light;
+}
+:root[data-theme="dark"] .spot::before {
+  background: radial-gradient(
+    380px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.18),
+    transparent 62%
+  );
+  mix-blend-mode: normal;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .spot::before {
+    background: radial-gradient(
+      380px circle at var(--mx, 50%) var(--my, 50%),
+      rgb(255 255 255 / 0.18),
+      transparent 62%
+    );
+    mix-blend-mode: normal;
+  }
+}
+.spot:hover::before {
+  opacity: 1;
+}
+
+/* article cards: lift and cover zoom on hover */
+@media (hover: hover) and (pointer: fine) {
+  .article-card,
+  .discussion-card {
+    transition:
+      translate 0.6s var(--ease-out),
+      box-shadow 0.6s var(--ease-out);
+  }
+  .article-card:hover,
+  .discussion-card:hover {
+    translate: 0 -4px;
+    box-shadow: var(--shadow-print);
+  }
+  .card-cover img {
+    transition: scale 1.4s var(--ease-out);
+  }
+  .article-card:hover .card-cover img {
+    scale: 1.06;
+  }
+}
+.article-card:active {
+  scale: 0.992;
+}
+
+/* heading anchors in articles (added by polish.js) */
+.article-body :is(h2, h3) {
+  position: relative;
+}
+.heading-anchor {
+  position: absolute;
+  left: -1.5em;
+  top: 0.1em;
+  width: 1.2em;
+  height: 1.2em;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--soft);
+  font-family: var(--sans);
+  font-size: 0.8em;
+  text-decoration: none;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    color 0.2s,
+    background-color 0.2s;
+}
+.article-body :is(h2, h3):hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+.heading-anchor:hover {
+  color: var(--link);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+@media (max-width: 900px) {
+  .heading-anchor {
+    display: none;
+  }
+}
+
+/* toast (copy link, install hints) */
+.pwa-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 200;
+  max-width: calc(100vw - 32px);
+  padding: 12px 20px;
+  border-radius: 980px;
+  background: var(--glass);
+  color: var(--ink);
+  font-size: 14px;
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 18px 40px -20px rgb(0 0 0 / 0.5);
+  -webkit-backdrop-filter: saturate(1.8) blur(20px);
+  backdrop-filter: saturate(1.8) blur(20px);
+  opacity: 0;
+  translate: -50% 16px;
+  transition:
+    opacity 0.3s,
+    translate 0.5s var(--ease-out);
+  pointer-events: none;
+}
+.pwa-toast.is-on {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+/* install control (footer; appears only when the app is installable) */
+.footer-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color 0.3s,
+    scale 0.2s var(--ease);
+}
+.footer-install[hidden] {
+  display: none;
+}
+.footer-install svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: translate 0.4s var(--ease-out);
+}
+.footer-install:hover {
+  color: var(--ink);
+}
+.footer-install:hover svg {
+  translate: 0 2px;
+}
+.footer-install:active {
+  scale: 0.95;
+}
+.is-standalone .footer-install {
+  display: none;
+}
+
+/* installed app: respect device safe areas */
+@media (display-mode: standalone) {
+  .site-header {
+    padding-top: env(safe-area-inset-top);
+  }
+  .skip-link:focus {
+    top: max(1rem, env(safe-area-inset-top));
+  }
+}
+.page-shell {
+  width: min(
+    calc(100% - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)),
+    var(--content-width)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+  .pill[data-pending]::before {
+    animation-duration: 1.6s !important;
+  }
+}
