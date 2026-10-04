@@ -4,7 +4,7 @@
    Pages: network-first (a deploy shows up on the next load), cached copy when offline.
    Hashed build assets: cache-first. Everything cross-origin is left to the browser (the site CSP
    does not allow the worker to fetch other origins). Bump VERSION to invalidate all caches. */
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL = `shell-${VERSION}`;
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
@@ -12,7 +12,7 @@ const MAX_PAGES = 40;
 const MAX_ASSETS = 80;
 
 const PRECACHE = [
-  "/offline.html",
+  "/offline",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/apple-touch-icon.png",
@@ -90,9 +90,7 @@ self.addEventListener("fetch", (event) => {
             !personal && PUBLIC_PAGE.test(url.pathname)
               ? await caches.match(request)
               : undefined;
-          return (
-            cached || (await caches.match("/offline.html")) || Response.error()
-          );
+          return cached || (await caches.match("/offline")) || Response.error();
         }
       })(),
     );
