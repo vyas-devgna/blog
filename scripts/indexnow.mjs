@@ -15,7 +15,9 @@ const urls = [
   ),
 ];
 
-const live = await fetch(`https://${HOST}/${KEY}.txt`);
+const live = await fetch(`https://${HOST}/${KEY}.txt`, {
+  signal: AbortSignal.timeout(30_000),
+});
 if (!live.ok || (await live.text()).trim() !== KEY) {
   console.error(
     "The key file is not live yet. Deploy first, then run this again.",
@@ -25,6 +27,7 @@ if (!live.ok || (await live.text()).trim() !== KEY) {
 
 const response = await fetch("https://api.indexnow.org/IndexNow", {
   method: "POST",
+  signal: AbortSignal.timeout(30_000),
   headers: { "content-type": "application/json; charset=utf-8" },
   body: JSON.stringify({
     host: HOST,

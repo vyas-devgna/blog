@@ -31,7 +31,7 @@ for (const post of published) {
   if (post.cover?.startsWith("/covers/")) {
     if (!html.includes(post.cover))
       throw new Error(`Artwork missing: ${post.slug}`);
-    for (const width of [480, 800, 1200])
+    for (const width of [480, 640, 800, 1200])
       await access(
         `${root}${post.cover.replace("-1200.webp", `-${width}.webp`)}`,
       );

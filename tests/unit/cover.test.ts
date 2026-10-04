@@ -4,7 +4,7 @@ import { coverSrcSet } from "../../src/lib/cover";
 describe("responsive artwork", () => {
   it("shares a content hash across all generated sizes", () => {
     expect(coverSrcSet("/covers/example-abcdef0123-1200.webp")).toBe(
-      "/covers/example-abcdef0123-480.webp 480w, /covers/example-abcdef0123-800.webp 800w, /covers/example-abcdef0123-1200.webp 1200w",
+      "/covers/example-abcdef0123-480.webp 480w, /covers/example-abcdef0123-640.webp 640w, /covers/example-abcdef0123-800.webp 800w, /covers/example-abcdef0123-1200.webp 1200w",
     );
   });
   it("does not invent variants for custom images or inline artwork", () => {

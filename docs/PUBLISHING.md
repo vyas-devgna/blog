@@ -5,7 +5,7 @@ Publishing is manual, as requested. There is no Git-to-production connection or 
 ## Publish a post
 
 1. Add Markdown/MDX under `src/content/blog/`. Supply a truthful title, description, publication timestamp and relevant tags. Keep `draft: true` while editing. Use `updatedAt` for a substantive revision, without changing the original publication date.
-2. Add original artwork to `src/assets/covers/<slug>.png` if available. `node scripts/generate-covers.mjs` creates 480, 800 and 1200 pixel WebP files under `public/covers/`, with a hash of the source in each filename. Set `cover` to its `/covers/<slug>-<hash>-1200.webp` path and `coverAlt` to a short visual description. These generated derivatives are ignored in Git; commit the source art and front matter. After replacing source artwork, update its hash in `cover`.
+2. Add original artwork to `src/assets/covers/<slug>.png` if available. `node scripts/generate-covers.mjs` creates 480, 640, 800 and 1200 pixel WebP files under `public/covers/`, with a hash of the source in each filename. Set `cover` to its `/covers/<slug>-<hash>-1200.webp` path and `coverAlt` to a short visual description. These generated derivatives are ignored in Git; commit the source art and front matter. After replacing source artwork, update its hash in `cover`.
 3. Remove `draft: true` when ready. Set `featured: true` only for the small editorial “Start here” shelf. Future-dated posts stay hidden until a build after their timestamp.
 4. Run `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm build`. Review the page and social card. Commit and push the source, then run `pnpm deploy` from the intended commit.
 

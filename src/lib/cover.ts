@@ -70,7 +70,7 @@ export const coverPalette = palette;
 export function coverSrcSet(cover: string) {
   if (!/^\/covers\/[a-z0-9-]+-[a-f0-9]{10}-1200\.webp$/.test(cover))
     return undefined;
-  return [480, 800, 1200]
+  return [480, 640, 800, 1200]
     .map(
       (width) => `${cover.replace("-1200.webp", `-${width}.webp`)} ${width}w`,
     )

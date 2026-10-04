@@ -9,7 +9,7 @@ for (const file of await readdir("src/assets/covers")) {
   const source = await readFile(`src/assets/covers/${file}`);
   const hash = createHash("sha256").update(source).digest("hex").slice(0, 10);
   const slug = file.slice(0, -4);
-  for (const width of [480, 800, 1200]) {
+  for (const width of [480, 640, 800, 1200]) {
     await sharp(source)
       .resize(width, Math.round((width * 760) / 1200), { fit: "cover" })
       .webp({ quality: 78 })
