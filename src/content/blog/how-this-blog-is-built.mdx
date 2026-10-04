@@ -1,0 +1,84 @@
+---
+title: "How this blog is built: Astro, Cloudflare Workers, Postgres, and why"
+description: "Static articles, a small server only where one is needed, bot checks, rate limits and a CSP with a build-time guard. The architecture behind this site and the trade-offs I accepted."
+publishedAt: 2026-10-04T08:00:00+05:30
+tags: [Web, Engineering]
+---
+
+A blog is the easy half of this site. Articles are text, and text can be built once and served from anywhere. The other half is a community layer with accounts, discussions, moderation and notifications, which needs a database, authentication and defences against abuse.
+
+The design question was how to keep the first half simple while the second half exists. The answer, in one sentence: **articles are static files, and the Worker only runs for the routes that need it.** Here is how that plays out, and what each choice costs.
+
+## Articles never touch a database
+
+Posts are Markdown or MDX files in the repository. Astro's content collections validate each file's front matter against a schema at build time, so a missing description or a title over 120 characters fails the build instead of reaching a reader:
+
+```ts
+const blog = defineCollection({
+  loader: glob({ base: "./src/content/blog", pattern: "**/*.{md,mdx}" }),
+  schema: z.object({
+    title: z.string().min(1).max(120),
+    description: z.string().min(1).max(200),
+    publishedAt: z.coerce.date(),
+    tags: z.array(z.string().min(1).max(40)).default([]),
+    draft: z.boolean().default(false),
+    featured: z.boolean().default(false),
+  }),
+});
+```
+
+The result is prerendered and served by Cloudflare Workers Static Assets. Reading an article needs no session, no database call and no client-side rendering, so it keeps working when the dynamic parts are slow or broken. MDX is authored only by the repository owner, which is what makes it safe to allow components in posts.
+
+The rule I follow: **static content stays in Git, and the database is reserved for user-generated data.** That keeps the history of the writing in version control and keeps the database small.
+
+## The dynamic path
+
+Community routes run on the Astro Cloudflare adapter. Every request follows the same chain: session, authorisation, input validation and abuse checks, then the database through Drizzle ORM on Neon Postgres, with Neon's managed authentication built on Better Auth. There is no separate API service and no client-side UI framework.
+
+Three details of that chain are worth showing, because they are where sites like this usually get hurt.
+
+### Roles are checked on the server, always
+
+Application roles (`user`, `moderator`, `admin`) live in the database, apart from the authentication provider's own permissions. Every privileged route checks the role on the server. The browser cannot supply or change one, and a link being hidden in the interface is never treated as access control. User-submitted text is rendered as text; there is no user HTML to sanitise because none is accepted.
+
+### Bot checks happen where they cannot be skipped
+
+Sign-up and posting by new accounts require a Cloudflare Turnstile challenge. The important part is where it is verified: the server sends the token to Turnstile's `siteverify` endpoint, passes the client address, adds a unique idempotency key, and gives up after five seconds. A challenge that only runs in the browser is a suggestion. A challenge verified on the server is a gate.
+
+### Rate limits are one atomic statement
+
+Limits are stored in Postgres and enforced with a single upsert. The identity (an address or an account) is hashed with SHA-256 before storage, so raw addresses are not kept.
+
+```sql
+INSERT INTO rate_limits (scope, key_hash, count, window_ends_at)
+VALUES ($1, $2, 1, $3)
+ON CONFLICT (scope, key_hash) DO UPDATE SET
+  count = CASE WHEN rate_limits.window_ends_at <= now() THEN 1 ELSE rate_limits.count + 1 END,
+  window_ends_at = CASE WHEN rate_limits.window_ends_at <= now() THEN $3 ELSE rate_limits.window_ends_at END
+RETURNING count, window_ends_at;
+```
+
+Doing the read-increment-compare in one statement matters. If you read the count, add one in application code and write it back, two simultaneous requests can both read the same value and both pass. One statement leaves nothing to race.
+
+The trade-off is that this is a fixed window, so a determined client can send a burst at the end of one window and another at the start of the next. For a community of this size that is acceptable. A sliding window or a token bucket would fix it at the cost of more state.
+
+Request bodies get the same suspicion. The JSON reader requires the right content type, rejects an oversized declared length early, and then counts bytes as it streams, so a client that lies about `Content-Length` is still cut off at the limit.
+
+## A Content Security Policy with a guard
+
+The site sets a strict Content Security Policy: scripts only from the same origin plus Turnstile, no inline scripts. There is one deliberate exception. A tiny script sets the colour theme and the signed-in state of the header before the first paint, which avoids a flash of the wrong theme. It is allowed by pinning its SHA-256 hash in the policy.
+
+A pinned hash has a failure mode: edit the script and forget the hash, and the browser silently refuses to run it. So the build includes a check that recomputes the hash from the file, fails if it does not appear in the policy, and fails if any built page contains an inline script that is not that one. A change to the theme script fails the build until the hash is regenerated, and no reader finds out the hard way.
+
+## Smaller decisions
+
+- **Page transitions** use the browser's cross-document view transitions with a few lines of CSS, instead of a client-side router that would turn the site into an app.
+- **The app can be installed,** and its service worker caches only the public reading pages. Account, community, authentication and API routes are never touched, so nothing personal can be stored or replayed from a cache.
+- **A small JSON feed** at `/posts.json` lists recent and featured posts, so my portfolio can show them without scraping the blog.
+- **Articles carry a `canonical` field** so a post republished elsewhere can point back here.
+
+## What I would change
+
+Fixed-window rate limiting, as above. Roles stored as a single column are easy to reason about today and will need more structure if the community grows. And a static-first design means any feature that wants fresh data on an article page, such as live comment counts, has to be a separate request rather than part of the page.
+
+Every one of these is a decision to revisit when the site's size justifies it. The point of the architecture is that the writing, which is the reason the site exists, does not depend on any of it being right on the first try.

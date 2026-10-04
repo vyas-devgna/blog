@@ -1,0 +1,107 @@
+---
+title: "Local-first collaboration without a server: how concurrent edits converge"
+description: "Two people drag the same shape at once and nobody owns the truth. How version numbers, tie-breaking nonces and tombstones make peers agree, and what that model costs you."
+publishedAt: 2026-10-04T08:20:00+05:30
+tags: [Web, Systems]
+---
+
+Two people are looking at the same canvas. Both grab the same rectangle at the same moment. One drags it left, the other turns it red, and each message takes a different amount of time to arrive. Whatever your collaboration software does next is an answer to a single question: what should the rectangle look like on every screen once the dust settles?
+
+Every design for shared editing is a different answer. I'll walk through the one used in [EzBoard](https://github.com/vyas-devgna/ezboard), a local-first drawing canvas where people and AI agents work together, because it is small enough to read in one sitting and instructive about what you give up.
+
+## Three families of answer
+
+**Serialise through a server.** One machine receives every change, puts them in an order, and tells everyone the result. This is simple to reason about and it makes permissions and history easy. It also means a server in the critical path, and the app stops when the server does.
+
+**Merge by construction with a CRDT.** Libraries such as Yjs and Automerge represent the document so that any two replicas that have seen the same changes end up identical, in whatever order the changes arrived. You get true offline editing and fine-grained merges. You also take on a heavier data model.
+
+**Version each object and pick a winner deterministically.** Every object carries a counter. When two copies of the same object disagree, a fixed rule decides which one wins, and every peer applies the same rule. This is the family EzBoard sits in, because it builds on the reconciliation logic of Excalidraw, the open-source whiteboard it embeds.
+
+## What an element carries
+
+In Excalidraw's element type, three fields do the work, and the source comments are clear about their intent:
+
+- `version`: an integer that "is sequentially incremented on each change."
+- `versionNonce`: a random integer regenerated on every change, used to reconcile deterministically when two versions are identical.
+- `isDeleted`: a boolean. Deleting an element sets this flag; it does not remove the element.
+
+There is a fourth field, `index`, a string in the form defined by the fractional-indexing scheme, used to order elements for display. I'll come back to it.
+
+## The rule
+
+When an update for an element arrives, the receiving peer compares it with its own copy. Here is the decision, simplified from Excalidraw's `reconcile.ts` (MIT licence):
+
+```ts
+const discardRemote =
+  local &&
+  (isBeingEditedHere(local) || // never yank an element out from under the user
+    local.version > remote.version || // local copy is newer
+    (local.version === remote.version && // same version: break the tie deterministically
+      local.versionNonce <= remote.versionNonce));
+```
+
+Keep the local copy if it is being edited right now, or if its version is higher. If the versions match, the **lower nonce wins**. Otherwise take the remote one.
+
+A tiny version of that comparison is enough to see why peers agree:
+
+```js
+function merge(local, remote) {
+  if (!local) return remote;
+  if (local.version > remote.version) return local;
+  if (
+    local.version === remote.version &&
+    local.versionNonce <= remote.versionNonce
+  )
+    return local;
+  return remote;
+}
+
+const a = { id: "r1", version: 4, versionNonce: 812, x: 10 };
+const b = { id: "r1", version: 4, versionNonce: 177, x: 90 };
+
+console.log(merge(a, b).x); // 90: b has the lower nonce
+console.log(merge(b, a).x); // 90: same answer when the messages arrive the other way round
+```
+
+The property that matters is the second line. The result does not depend on which copy you started from, so it does not depend on delivery order. For any two competing versions of an element, every peer reaches the same winner, as long as the nonces differ. Peers can receive updates late, twice, or out of order and still converge.
+
+The first clause is the exception worth understanding. An element you are dragging or typing into is never overwritten mid-gesture. That keeps the interface usable. Ordinary resolution resumes once the edit finishes and the element's version goes up again.
+
+## Why deleting an element does not remove it
+
+Suppose a delete removed the element from the array. A peer who has not yet heard about the deletion still holds the old copy. The next time it broadcasts, the element comes back, and a deleted shape is resurrected on everyone's screen.
+
+Marking the element `isDeleted: true` and bumping its version turns a deletion into one more update. It goes through the same comparison as any other change, and a higher version beats a stale copy. The record that something was deleted is the thing that stops it returning. These records are called tombstones, and they are the price of avoiding resurrection: the document keeps a trace of everything ever deleted, until something prunes it.
+
+## Ordering without renumbering
+
+Layer order is a harder problem than it looks. If elements were numbered 1, 2, 3, then inserting one between 2 and 3 would force a renumbering that every peer must agree on.
+
+Fractional indexing avoids that by using strings that sort between their neighbours, so a new element picks a value between two existing ones without touching anything else. Two peers inserting at the same spot can still generate equal values, so the reconciliation code includes a pass to de-duplicate indices after merging.
+
+## What the model costs
+
+This approach is attractive because it is cheap and local, but its granularity is the element, and that has consequences.
+
+**Concurrent edits to different properties of the same element do not merge.** If you recolour a rectangle while someone else moves it, one of the two changes wins whole and the other is lost. A finer model, such as a map CRDT with a register per property, would keep both.
+
+**Text inside an element is a single value.** Two people typing into the same text box are not merged character by character. That needs a sequence CRDT.
+
+**Tombstones accumulate,** and something has to decide when it is safe to forget them.
+
+For a whiteboard, these costs are usually acceptable. People rarely edit the same shape at the same instant, and when they do, a visible conflict is easy to notice and repair. For a shared spreadsheet or a document, they would not be.
+
+## How EzBoard moves the data
+
+The architecture around this logic is deliberately light. Peers broadcast changed elements and send a full snapshot to anyone who joins. The data travels over WebRTC data channels, as described in [how browser-to-browser transfer works](/blog/browser-to-browser-file-transfer-webrtc/). Peer discovery uses public Nostr relays through the Trystero library, so you share a short room code instead of signing up. Boards live in the browser's IndexedDB and local storage, which is the "local-first" part: your work exists on your device first, and sharing is something you do to it.
+
+## When local-first is the wrong tool
+
+It fits personal or small-group work, privacy-sensitive material, and places where connectivity comes and goes. It fits poorly where you need a central authority:
+
+- fine-grained permissions that the server must enforce,
+- audit trails you can trust,
+- large datasets, or search across everyone's content,
+- compliance rules about where data may live.
+
+The useful habit is matching the consistency model to the grain of the thing being edited. A per-object counter and a tie-break is enough for shapes on a canvas. It is the wrong answer for a paragraph, and knowing which you are building decides everything else.

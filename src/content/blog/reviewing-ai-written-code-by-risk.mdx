@@ -1,0 +1,104 @@
+---
+title: "How to review AI-written code: match the scrutiny to the risk"
+description: "Reading every AI-generated diff with equal care wastes time and still misses the dangerous one. A five-level depth scale, a claim-to-evidence table, and a one-line change that passes the tests."
+publishedAt: 2026-10-04T09:00:00+05:30
+tags: [AI agents, Engineering]
+---
+
+A coding agent produces diffs faster than anyone can read them with full attention. Reviewers respond in one of two ways. Some read everything with the same effort, run out of patience, and approve the last third on trust. Others skim everything and rely on the tests. Both fail the same way: effort is spread by volume instead of by consequence.
+
+Here is a change an agent might propose as a null-safety tidy-up. The code is illustrative, not from a real project.
+
+```diff
+ function verifyToken(token) {
+-  if (token.audience !== SERVICE_ID) throw new Forbidden();
++  if (token.audience && token.audience !== SERVICE_ID) throw new Forbidden();
+   return token.subject;
+ }
+```
+
+It is one line. It reads like defensive programming. A typical test suite, which exercises tokens with the right audience and tokens with a wrong one, still passes. And it changes the function from "reject tokens not issued for this service" to "also accept tokens that name no service at all." That is an authentication bypass hiding inside a cleanup, and it is the exact rule the [MCP security checklist](/blog/mcp-server-security-checklist/) calls out for servers: never accept a token that was not issued for you.
+
+Now compare it with a diff that renames a local variable across forty files. The second is larger and safer by an order of magnitude. A review process that cannot tell them apart is not a process, it is a mood.
+
+## Review depth should follow consequence
+
+[Braids](https://github.com/vyas-devgna/braids), an open-source set of skills I wrote for coding agents, is built around one idea: match the work to the risk. It sorts changes onto a five-level scale. The same scale works for a human reviewer.
+
+| Level | Typical change                                           | What the review should do                                                       |
+| ----- | -------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| D0    | Safe, local, reversible                                  | Look and merge. Nothing more is justified.                                      |
+| D1    | Routine, bounded change                                  | Check the targeted context and run the relevant tests.                          |
+| D2    | Cross-module or platform-sensitive                       | Write down the change surface (callers, config, build) and verify more broadly. |
+| D3    | Security, reliability, concurrency, measured performance | Threat and failure analysis, with stronger evidence.                            |
+| D4    | Irreversible, mission-critical, hard to recover          | A staged plan with migration, rollback and recovery.                            |
+
+The token-audience change above is D3, whatever its line count. What decides the level is what happens if it is wrong: who is affected, whether it can be undone, whether it fails loudly. The size of the diff barely matters.
+
+Two habits make the scale work. Classify _before_ you read the code closely, since reading first biases you toward whatever the author emphasised. And let the level set a floor on care, even when someone is in a hurry. "Just make this test pass" is a perfectly good request at D0 and a bad one when the change weakens authorisation.
+
+## Claims need evidence, and most do not have any
+
+Agents and humans alike write summaries like "this is now faster," "this is secure," "this is production-ready." Each of those is a claim, and a useful review asks what would prove it. This is the job of a claim ledger: list each material claim next to the evidence that could establish it, and mark what is missing.
+
+| Claim                  | Evidence that would actually support it                                         | Weak evidence to distrust                                            |
+| ---------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| "Faster"               | Before-and-after measurement on the same machine, repeated, with variance shown | One run, or a micro-benchmark that skips the real path               |
+| "Secure"               | A stated threat model and a test that exercises the _failing_ case              | "No new vulnerabilities found" with no description of what was tried |
+| "No behaviour change"  | Tests that pin the old behaviour, or a diff of the public interface             | "Tests still pass" when no test covers the changed path              |
+| "Backwards compatible" | A search of callers, plus contract tests for the boundary                       | Reading only the file that changed                                   |
+| "Production-ready"     | Failure paths handled, rollback plan, enough logging to debug an incident       | A green CI badge                                                     |
+
+The token example fits the second row. "Tests pass" is true and tells you nothing, because no test sends a token with no audience. The missing evidence is a test that sends exactly that token and expects rejection. Write that test first and the diff above fails it.
+
+## Find the change surface
+
+Agents tend to modify the file named in the task and miss the callers. Reviewers can recover from that quickly, and a grep is usually enough:
+
+```sh
+# Who calls the function that changed?
+git grep -n "verifyToken(" -- ':!*.test.*'
+
+# Which config, docs or migrations mention the thing that changed?
+git grep -n -i "audience"
+```
+
+For anything at D2 or above, write down the callers, the config that influences the behaviour, and any other code that depends on the old behaviour. If you cannot list them, you have not reviewed the change yet.
+
+## Price the dependencies
+
+An added package is a recurring cost that is easy to ignore on the day it is installed. Braids has the agent price five things before it adds one: security exposure, maintenance burden, transitive dependencies, portability, and exit cost, meaning how hard it will be to remove later. If the same behaviour is a short function the project could own, that is usually the better trade. When a dependency is justified, the justification should name the scenario it serves.
+
+## Stop when the task is done
+
+Review effort has a cost too. The Braids README puts the whole philosophy in a few words: complexity is a cost, it should be required to purchase scenario-linked value, and "no change" is a valid result. If an agent proposes a refactor that fixes nothing a user can notice, declining it is a legitimate outcome of review, and often the correct one.
+
+## A review template you can paste into a pull request
+
+```md
+**Depth:** D0 / D1 / D2 / D3 / D4 — because: <what happens if this is wrong>
+
+**Change surface:** callers, config, docs, migrations affected: <list>
+
+**Claims and evidence**
+
+- [ ] <claim> — proven by <test / measurement / threat-model note>
+- [ ] <claim> — NOT yet proven
+
+**Failure paths considered:** partial failure, retry, concurrency, bad input
+
+**Dependencies added:** none / <name, and the scenario it serves>
+```
+
+Fill it in from the diff, not from the agent's own description of it. A summary written by the author of a change is evidence about what the author intended.
+
+## Using Braids with your agent
+
+Braids is experimental. If you want the method available inside your agent, the Claude Code install is two commands (other hosts are covered in the [README](https://github.com/vyas-devgna/braids)):
+
+```sh
+claude plugin marketplace add vyas-devgna/braids
+claude plugin install braids@braids
+```
+
+You do not need it to use the scale. The point is the habit: decide how much a change deserves before you decide how closely to read it.

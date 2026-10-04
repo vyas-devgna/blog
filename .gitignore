@@ -29,3 +29,6 @@ pnpm-debug.log*
 
 # Local Neon project context
 .neon
+
+# generated social cards (scripts/generate-og.mjs)
+public/og/

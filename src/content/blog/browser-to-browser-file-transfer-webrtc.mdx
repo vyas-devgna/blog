@@ -1,0 +1,119 @@
+---
+title: "How browser-to-browser file transfer works (and where WebRTC gives up)"
+description: "Signalling, ICE, NAT traversal, data channels, chunking and backpressure: the mechanics of sending a file between two browsers with no upload server, and what breaks."
+publishedAt: 2026-10-04T08:40:00+05:30
+tags: [Web, Networking]
+---
+
+Sending a file from your phone to your laptop through a cloud service means the file travels to a data centre and back. Two browsers can skip the detour and talk directly, with traffic encrypted end to end between them. The protocol has existed for years. What is surprising is how many separate problems have to be solved before the first byte moves.
+
+I built [ez-drop](https://github.com/vyas-devgna/ez-drop), a static web app that does exactly this: no app server, no upload bucket, no accounts. This article walks through the mechanics using what ez-drop does as the running example, including the parts where the direct route fails.
+
+## Step zero: the browsers have to find each other
+
+WebRTC does not specify how two peers first exchange connection details. That exchange is called **signalling**, and you have to supply it yourself. Each side needs the other's session description (an SDP offer and answer describing codecs, keys and capabilities) and a stream of network candidates.
+
+In ez-drop, signalling goes through PeerJS, which provides a rendezvous service. You open the app on two devices, connect with a room code or a QR code, and one side approves the request. Once the connection exists, the signalling server is out of the loop. File contents are never uploaded to an ez-drop backend.
+
+This is the first honest caveat. "Serverless" means there is no server holding your files. There is still a small piece of shared infrastructure that introduces two strangers.
+
+## Finding a path through the network
+
+Most devices sit behind a router doing network address translation, so they do not have a public address that the other side can simply connect to. WebRTC uses a framework called ICE to try several routes and pick one that works. Each route is a _candidate_:
+
+- **host**: an address on your own network. If both devices are on the same Wi-Fi, this is the fast path.
+- **server-reflexive**: your public address and port as seen from outside, discovered by asking a **STUN** server "what do you see when I send you something?"
+- **relay**: a path through a **TURN** server that forwards traffic when nothing direct works.
+
+MDN describes the failure that makes TURN necessary. Some routers use _symmetric NAT_, which only accepts connections from peers you have previously contacted. STUN cannot punch through that. TURN opens a connection to a relay and sends all traffic through it, which, in MDN's words, "obviously comes with some overhead so it is only used if there are no other alternatives."
+
+That is the second honest caveat, and the larger one. A relay carries your bytes, costs someone bandwidth, and sees traffic volume (though not content, which stays encrypted). On a locked-down corporate network, or behind some carrier networks, the direct route can fail and a relay may be the only option. A pure peer-to-peer app with no TURN server simply will not connect there.
+
+ez-drop inspects the candidates that were actually chosen and labels the route as LAN, direct or relay. When the route is a local network, it switches to a faster transfer profile. You can do the same check yourself:
+
+```js
+// Sketch: classify the route WebRTC actually selected.
+async function routeKind(pc) {
+  const stats = await pc.getStats();
+  let pair;
+  for (const report of stats.values()) {
+    if (
+      report.type === "candidate-pair" &&
+      report.nominated &&
+      report.state === "succeeded"
+    )
+      pair = report;
+  }
+  if (!pair) return "unknown";
+
+  const local = stats.get(pair.localCandidateId);
+  const remote = stats.get(pair.remoteCandidateId);
+  if (local.candidateType === "relay" || remote.candidateType === "relay")
+    return "relay";
+  if (local.candidateType === "host" && remote.candidateType === "host")
+    return "lan";
+  return "direct";
+}
+```
+
+## The data channel
+
+Once ICE has a path, WebRTC opens an `RTCDataChannel`, which carries arbitrary messages between the browsers over SCTP, wrapped in DTLS. MDN is explicit that all WebRTC data is encrypted and that on a data channel the encryption is DTLS, which is based on TLS. You do not opt in, and you cannot opt out.
+
+A channel is reliable and ordered by default, which is what you want for a file. It behaves like a small TCP connection between the two pages.
+
+## Why files are sent in chunks
+
+You cannot hand a 2 GB file to `send()`. Messages have a size limit, and large messages cause trouble even when they are allowed. MDN's guidance: most modern browsers support messages of at least 256 KB, but large messages risk head-of-line blocking that delays everything else on the connection. If the SDP does not state a maximum, a default of 64 KB is assumed.
+
+So you cut the file into pieces. ez-drop uses 64 KB chunks on a standard route and 256 KB on its LAN profile, where the faster, more predictable path can handle bigger pieces. The standard-route number matches the 64 KB default above.
+
+## Backpressure: the bug everyone writes first
+
+The naive sender loops over the file and calls `send()` for every chunk. `send()` does not block. It queues. Send faster than the network drains and you pile gigabytes into the browser's buffer, which makes memory climb and can close the channel.
+
+The fix is to watch `bufferedAmount` and pause when it gets large, then resume when the browser tells you the queue has drained:
+
+```js
+const CHUNK = 64 * 1024; // safe default message size
+const HIGH_WATER = 4 * 1024 * 1024; // pause above this much queued data
+
+async function sendFile(file, channel) {
+  channel.binaryType = "arraybuffer";
+  channel.bufferedAmountLowThreshold = 1024 * 1024; // resume below 1 MiB
+
+  for (let offset = 0; offset < file.size; offset += CHUNK) {
+    if (channel.bufferedAmount > HIGH_WATER) {
+      await new Promise((resolve) =>
+        channel.addEventListener("bufferedamountlow", resolve, { once: true }),
+      );
+    }
+    const chunk = await file.slice(offset, offset + CHUNK).arrayBuffer();
+    channel.send(chunk);
+  }
+}
+```
+
+`file.slice()` reads lazily, so the file is never fully in memory on the sending side.
+
+## A protocol on top of the pipe
+
+A channel gives you bytes. A transfer needs conversation. ez-drop defines small structured messages: a handshake (`hello`, `accept`, `decline`), then `file-offer` with the file's details, `file-accept` before any bytes are sent, `file-meta` with chunk size and an optional checksum, a stream of `file-chunk` messages, and `file-complete`. There are also `file-cancel` and `file-error` for recovery, and `text` for snippets.
+
+The ordering matters for consent. The receiver sees what is being offered and approves it before the first chunk moves. A transfer you did not ask for never starts. Room codes are designed to be quick to type, so an explicit approval step carries real weight.
+
+Integrity is a separate concern. Chunks arrive in order over a reliable channel, but you still want proof that the reassembled file is the one that was sent. ez-drop supports SHA-256 verification for eligible transfers. One practical constraint on doing that in a browser: `crypto.subtle.digest()` takes a complete buffer and has no incremental mode, so hashing a very large file means either holding it in memory or bringing your own streaming implementation.
+
+## Receiving without running out of memory
+
+The receiver has the mirror-image problem. Collecting every chunk into one big `Blob` works for small files and falls over for large ones. On Chromium desktop browsers, the File System Access API lets you stream chunks straight to a file the user chose. Elsewhere you generally fall back to in-memory assembly and a download link, which is why very large transfers are most comfortable on Chromium.
+
+## What a serverless transfer cannot do
+
+Because nothing sits in the middle, several things follow that no amount of polish changes:
+
+- **Both pages must be open and active.** There is no store-and-forward. If the sender's tab is suspended or the phone locks mid-transfer, it stops.
+- **It cannot reach a peer it cannot route to.** Symmetric NAT without a relay means no connection.
+- **No server means no resume from a different device,** no download link that outlives the session, and no transfer history except what each browser kept locally.
+
+These are the same trade-offs that apply to any peer-to-peer design, and they get sharper once the thing being shared is a live document rather than a file; [local-first collaboration](/blog/local-first-collaboration-without-a-server/) is the next layer up. Whether they matter depends on the job. For handing a PDF from a laptop to the phone next to it, they barely register. For sending a video to a colleague on another continent who might not be online for an hour, a cloud link is the better tool, and the honest thing a peer-to-peer app can do is say so.

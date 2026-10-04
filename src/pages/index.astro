@@ -7,7 +7,10 @@ import { topicSlug } from '../lib/topics';
 
 export const prerender = true;
 const allPosts = await getPublishedPosts();
-const posts = allPosts.slice(0, 4);
+const featuredPosts = allPosts.filter((post) => post.data.featured).slice(0, 3);
+const featuredIds = new Set(featuredPosts.map((post) => post.id));
+// Recent writing skips what is already on the "Start here" shelf, so no article appears twice.
+const posts = allPosts.filter((post) => !featuredIds.has(post.id)).slice(0, 4);
 const topics = getTopics(allPosts);
 const homeSeed = [...'Notes on systems, software and research.'].reduce(
 	(seed, letter) => (seed * 31 + letter.charCodeAt(0)) % 2147483647,
@@ -73,6 +76,21 @@ const homeStructuredData = [
 			</div>
 		</div>
 	</section>
+
+	{featuredPosts.length > 0 && (
+		<section class="home-section start-here" aria-labelledby="start-heading">
+			<div class="section-heading">
+				<div>
+					<p class="section-label">If you read only a few</p>
+					<h2 id="start-heading">Start here</h2>
+				</div>
+				<a class="more-link" href="/blog/">All writing</a>
+			</div>
+			<div class="related-grid start-grid">
+				{featuredPosts.map((post) => <ArticleCard post={post} />)}
+			</div>
+		</section>
+	)}
 
 	<section class="home-section" aria-labelledby="recent-heading">
 		<div class="section-heading">

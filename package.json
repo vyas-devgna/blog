@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/check-built-scripts.mjs",
+    "build": "node scripts/generate-og.mjs && astro build && node scripts/check-built-scripts.mjs",
     "preview": "astro preview",
     "typecheck": "astro check",
     "lint": "prettier --check .",
@@ -17,7 +17,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:check": "drizzle-kit check",
     "deploy": "pnpm build && wrangler deploy",
-    "astro": "astro"
+    "astro": "astro",
+    "og": "node scripts/generate-og.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",
@@ -35,9 +37,12 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@fontsource/inter": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
     "drizzle-kit": "^0.31.11",
     "neon": "8.0.4",
     "prettier": "^3.9.9",
+    "satori": "^0.35.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.3",
     "wrangler": "^4.147.0"

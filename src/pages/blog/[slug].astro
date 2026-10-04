@@ -7,6 +7,7 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import { coverForSlug } from '../../lib/cover';
 import { getReadingTime, getPublishedPosts } from '../../lib/posts';
 import { topicSlug } from '../../lib/topics';
+import ArticleExtras from '../../components/ArticleExtras.astro';
 
 export const prerender = true;
 
@@ -36,7 +37,8 @@ const modified = post.data.updatedAt ?? post.data.publishedAt;
 const updated = new Intl.DateTimeFormat('en', { dateStyle: 'long', timeZone: 'UTC' }).format(
 	modified,
 );
-const ogImage = new URL('/og.png', Astro.site).toString();
+const ogPath = '/og/' + post.id + '.png';
+const ogImage = new URL(ogPath, Astro.site).toString();
 const articleStructuredData = [
 	{
 		'@context': 'https://schema.org',
@@ -54,6 +56,11 @@ const articleStructuredData = [
 			url: 'https://vyasdevgna.online/',
 		},
 		keywords: post.data.tags,
+		articleSection: firstTag,
+		inLanguage: 'en',
+		isAccessibleForFree: true,
+		wordCount: (post.body ?? '').split(/\s+/).filter(Boolean).length,
+		timeRequired: 'PT' + readingTime + 'M',
 	},
 	{
 		'@context': 'https://schema.org',
@@ -72,6 +79,7 @@ const articleStructuredData = [
 	description={post.data.description}
 	canonical={canonical}
 	ogType="article"
+	ogImage={ogPath}
 	publishedTime={post.data.publishedAt}
 	modifiedTime={modified}
 	jsonLd={articleStructuredData}
@@ -167,6 +175,8 @@ const articleStructuredData = [
 				</div>
 				<small>Updated {updated}</small>
 			</footer>
+
+			<ArticleExtras post={post} posts={posts} url={canonical} />
 
 			{(previousPost || nextPost) && (
 				<nav class="post-navigation" aria-label="More writing">

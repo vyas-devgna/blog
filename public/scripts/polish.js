@@ -202,4 +202,30 @@
     (e) => prefetch(e.target.closest?.("a[href]")),
     { passive: true },
   );
+
+  /* ---- sharing: copy link, and the native share sheet where the browser has one ---- */
+  document.querySelectorAll("[data-copy-link]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.url || location.href);
+        toast("Link copied");
+      } catch {
+        toast("Copy failed — select the address bar instead");
+      }
+    });
+  });
+  document.querySelectorAll("[data-native-share]").forEach((btn) => {
+    if (!navigator.share) return;
+    btn.hidden = false;
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.share({
+          title: btn.dataset.title,
+          url: btn.dataset.url,
+        });
+      } catch {
+        /* the person closed the share sheet */
+      }
+    });
+  });
 })();

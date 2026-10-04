@@ -1,0 +1,61 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ArticleCard from './ArticleCard.astro';
+
+interface Props {
+	post: CollectionEntry<'blog'>;
+	posts: CollectionEntry<'blog'>[];
+	url: string;
+}
+
+const { post, posts, url } = Astro.props;
+
+// Related = other published posts ranked by how many topics they share, newest first on ties.
+const mine = new Set(post.data.tags);
+const related = posts
+	.filter((candidate) => candidate.id !== post.id)
+	.map((candidate) => ({ candidate, score: candidate.data.tags.filter((tag) => mine.has(tag)).length }))
+	.filter(({ score }) => score > 0)
+	.sort(
+		(a, b) =>
+			b.score - a.score || b.candidate.data.publishedAt.valueOf() - a.candidate.data.publishedAt.valueOf(),
+	)
+	.slice(0, 3)
+	.map(({ candidate }) => candidate);
+
+const u = encodeURIComponent(url);
+const t = encodeURIComponent(post.data.title);
+const targets = [
+	{ name: 'X', href: `https://twitter.com/intent/tweet?text=${t}&url=${u}` },
+	{ name: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}` },
+	{ name: 'Hacker News', href: `https://news.ycombinator.com/submitlink?u=${u}&t=${t}` },
+	{ name: 'Reddit', href: `https://www.reddit.com/submit?url=${u}&title=${t}` },
+];
+---
+
+<section class="share" aria-labelledby="share-heading">
+	<h2 id="share-heading">Found this useful? Pass it on.</h2>
+	<ul>
+		{targets.map((target) => (
+			<li>
+				<a class="pill pill-line" href={target.href} target="_blank" rel="noopener noreferrer">{target.name}<span class="visually-hidden"> (opens in a new tab)</span></a>
+			</li>
+		))}
+		<li>
+			<button class="pill pill-line" type="button" data-copy-link data-url={url}>Copy link</button>
+		</li>
+		<li>
+			<button class="pill pill-solid" type="button" data-native-share data-url={url} data-title={post.data.title} hidden>Share…</button>
+		</li>
+	</ul>
+</section>
+
+{related.length > 0 && (
+	<section class="related" aria-labelledby="related-heading">
+		<p class="section-label">Keep reading</p>
+		<h2 id="related-heading">More on {post.data.tags[0] ?? 'this topic'}</h2>
+		<div class="related-grid">
+			{related.map((entry) => <ArticleCard post={entry} />)}
+		</div>
+	</section>
+)}
