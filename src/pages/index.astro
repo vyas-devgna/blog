@@ -1,5 +1,5 @@
 ---
-import { author } from '../lib/seo';
+import { author, BLOG_NAME } from '../lib/seo';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import { getPublishedPosts, getTopics } from '../lib/posts';
@@ -21,17 +21,17 @@ const homeStructuredData = [
 		'@context': 'https://schema.org',
 		'@type': 'Blog',
 		'@id': 'https://blog.vyasdevgna.online/#blog',
-		name: 'Vyas',
+		name: BLOG_NAME,
 		url: 'https://blog.vyasdevgna.online/',
-		description: 'Independent notes on software, research, and the things worth understanding.',
+		description: 'Devgna Vyas writes about systems engineering, AI agent security, open source, and research.',
 		author,
 	},
 ];
 ---
 
 <SiteLayout
-	title="Notes on software and systems"
-	description="Independent notes on software, research, and the things worth understanding."
+	title="Software, systems & research"
+	description="The blog of Devgna Vyas, systems engineer and published researcher. Essays on AI agent security, networking, local-first software, open source, and HERMES research."
 	jsonLd={homeStructuredData}
 >
 	<section class="home-hero" aria-labelledby="home-title">

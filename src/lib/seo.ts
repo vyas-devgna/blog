@@ -1,14 +1,23 @@
 export const BLOG_URL = "https://blog.vyasdevgna.online";
+export const BLOG_NAME = "Devgna Vyas Blog";
 export const PERSON_ID = "https://vyasdevgna.online/#person";
 
 export const author = {
   "@type": "Person",
   "@id": PERSON_ID,
   name: "Devgna Vyas",
+  givenName: "Devgna",
+  familyName: "Vyas",
+  alternateName: ["Vyas Devgna", "vyasdevgna"],
   url: "https://vyasdevgna.online/",
+  image: "https://vyasdevgna.online/images/portrait.webp",
+  jobTitle: "Systems Engineer",
+  description:
+    "Systems engineer and published researcher working across agent infrastructure, local-first software, networking, security and open source.",
   sameAs: [
     "https://github.com/vyas-devgna",
     "https://linkedin.com/in/devgna-vyas",
+    "https://blog.vyasdevgna.online/about/",
   ],
 };
 

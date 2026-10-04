@@ -5,7 +5,7 @@ import themeInitializer from '../../public/scripts/theme-init.js?raw';
 import '../styles/community.css';
 import { Image } from 'astro:assets';
 import logo from '../../public/vd-logo.png';
-import { author, BLOG_URL, serializeJsonLd } from '../lib/seo';
+import { author, BLOG_NAME, BLOG_URL, serializeJsonLd } from '../lib/seo';
 import '../styles/polish.css';
 
 interface Props {
@@ -34,7 +34,7 @@ const {
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
 const siteStructuredData = { '@context': 'https://schema.org', '@graph': [author, {
-  '@type': 'WebSite', '@id': BLOG_URL + '/#website', url: BLOG_URL + '/', name: 'Vyas', alternateName: 'Vyas — Devgna Vyas', inLanguage: 'en', publisher: { '@id': author['@id'] },
+  '@type': 'WebSite', '@id': BLOG_URL + '/#website', url: BLOG_URL + '/', name: BLOG_NAME, alternateName: ['Vyas', 'Vyas Devgna Blog'], inLanguage: 'en', publisher: { '@id': author['@id'] },
 }] };
 const currentPath = Astro.url.pathname;
 const activePage = (href: string) => currentPath.startsWith(href) ? 'page' as const : undefined;
@@ -49,15 +49,15 @@ const serializedJsonLd = [siteStructuredData, ...jsonLd].map(serializeJsonLd);
 		<meta name="color-scheme" content="light dark" />
 		<meta name="theme-color" content="#fbfbfd" id="theme-color" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title} · Vyas</title>
+		<title>{title} · {BLOG_NAME}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonicalUrl} />
 		<meta name="robots" content={noindex ? "noindex, follow" : "index, follow, max-image-preview:large"} />
 		<meta name="author" content="Devgna Vyas" />
 		<meta property="og:locale" content="en_US" />
 		<meta property="og:type" content={ogType} />
-		<meta property="og:site_name" content="Vyas" />
-		<meta property="og:title" content={title + ' · Vyas'} />
+		<meta property="og:site_name" content={BLOG_NAME} />
+		<meta property="og:title" content={title + ' · ' + BLOG_NAME} />
 		<meta property="og:description" content={description} />
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:image" content={ogImageUrl} />
@@ -66,7 +66,7 @@ const serializedJsonLd = [siteStructuredData, ...jsonLd].map(serializeJsonLd);
 		<meta property="og:image:alt" content="Vyas — independent writing by Devgna Vyas" />
 		{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 		{modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
-		<meta name="twitter:title" content={title + ' · Vyas'} />
+		<meta name="twitter:title" content={title + ' · ' + BLOG_NAME} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:image" content={ogImageUrl} />

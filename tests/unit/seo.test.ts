@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  author,
+  PERSON_ID,
   includeInSitemap,
   isPublished,
   escapeXml,
   serializeJsonLd,
 } from "../../src/lib/seo";
+
+it("identifies the same author across the portfolio and publication", () => {
+  expect(author["@id"]).toBe(PERSON_ID);
+  expect(author.name).toBe("Devgna Vyas");
+  expect(author.alternateName).toContain("Vyas Devgna");
+  expect(author.sameAs).toContain("https://blog.vyasdevgna.online/about/");
+});
 
 describe("sitemap eligibility", () => {
   it("includes canonical public publication routes", () => {
