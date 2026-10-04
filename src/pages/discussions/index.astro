@@ -1,11 +1,16 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
 export const prerender = true;
 ---
 
 <SiteLayout title="Discussions" description="A technical community for thoughtful questions and shared work.">
 	<section class="page-shell">
-		<header class="page-heading"><p class="eyebrow">Community</p><h1 class="page-title">Discussions</h1><p class="page-intro">A small forum for questions, projects, and considered exchange.</p></header>
-		<p class="empty-note">The community backend is not connected yet. Discussion creation and accounts will be available after the database and authentication services are configured.</p>
+		<PageHeader label="Community" title="Discussions" intro="A small forum for questions, projects, and considered exchange." />
+		<div class="empty-page-print community-print">
+			<p class="exhibit-label"><b>Coming soon</b><span>A place for thoughtful exchange</span></p>
+			<p>The discussion space is not open yet. Published writing will remain available without an account.</p>
+			<a class="more-link" href="/blog/">Explore the writing</a>
+		</div>
 	</section>
 </SiteLayout>

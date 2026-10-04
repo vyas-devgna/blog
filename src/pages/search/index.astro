@@ -98,6 +98,7 @@ const posts = await getPublishedPosts();
 		input?.addEventListener('input', updateSearch);
 		document.addEventListener('keydown', (event: KeyboardEvent) => {
 			const target = event.target;
+			if (event.key === '/' && target === input) return;
 			if (target instanceof HTMLElement && target !== input && (target.isContentEditable || target.matches('input, textarea, select'))) return;
 			const focusShortcut = event.key === '/' || (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey));
 			if (!focusShortcut || event.altKey || !input) return;
