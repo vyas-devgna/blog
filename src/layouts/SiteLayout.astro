@@ -7,6 +7,7 @@ interface Props {
 	canonical?: string;
 	noindex?: boolean;
 }
+
 const { title, description, canonical, noindex = false } = Astro.props;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
 ---
@@ -17,7 +18,7 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toStri
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="color-scheme" content="light dark" />
-		<meta name="theme-color" content="#edf1f0" />
+		<meta name="theme-color" content="#fbfbfd" id="theme-color" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title} · Vyas</title>
 		<meta name="description" content={description} />
@@ -25,30 +26,195 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toStri
 		{noindex && <meta name="robots" content="noindex, nofollow" />}
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="Vyas" />
-		<meta property="og:title" content={`${title} · Vyas`} />
+		<meta property="og:title" content={title + ' · Vyas'} />
 		<meta property="og:description" content={description} />
 		<meta property="og:url" content={canonicalUrl} />
-		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:card" content="summary_large_image" />
 		<link rel="alternate" type="application/rss+xml" title="Vyas · RSS" href="/rss.xml" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" href="/vd-logo.png" />
+		<link rel="apple-touch-icon" href="/vd-logo.png" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,300..700&family=Newsreader:opsz,wght@6..72,300..700&display=swap"
+			rel="stylesheet"
+		/>
+		<script is:inline>
+			try {
+				const savedTheme = localStorage.getItem('vyas-theme');
+				const root = document.documentElement;
+				if (savedTheme === 'light' || savedTheme === 'dark') {
+					root.dataset.theme = savedTheme;
+				}
+				const dark = root.dataset.theme === 'dark' ||
+					(!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+				document.querySelector('#theme-color')?.setAttribute('content', dark ? '#000000' : '#fbfbfd');
+			} catch {
+				// Theme storage is optional; system preferences remain available.
+			}
+		</script>
 	</head>
 	<body>
 		<a class="skip-link" href="#main">Skip to content</a>
 		<header class="site-header">
-			<a class="wordmark" href="/" aria-label="Vyas home"><span class="wordmark-mark">V</span><span>Vyas</span></a>
-			<nav aria-label="Main navigation">
+			<div class="site-header-inner">
+				<a class="wordmark" href="/" aria-label="Vyas home">
+					<img src="/vd-logo.png" alt="" width="40" height="40" fetchpriority="high" />
+					<span>Vyas</span>
+				</a>
+				<nav class="desktop-nav" aria-label="Main navigation">
+					<a href="/blog/">Writing</a>
+					<a href="/topics/">Topics</a>
+					<a href="/projects/">Projects</a>
+					<a href="/about/">About</a>
+					<a href="/search/">Search</a>
+				</nav>
+				<div class="nav-actions">
+					<button
+						class="theme-toggle"
+						id="theme-toggle"
+						type="button"
+						aria-label="Toggle color theme"
+						aria-pressed="false"
+						title="Toggle light and dark appearance"
+					>
+						<svg class="theme-icon theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+							<circle cx="12" cy="12" r="4" />
+							<path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" />
+						</svg>
+						<svg class="theme-icon theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+							<path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z" />
+						</svg>
+					</button>
+					<a class="portfolio-link" href="https://vyasdevgna.online/">Portfolio <span aria-hidden="true">↗</span></a>
+					<button
+						class="menu-toggle"
+						id="menu-toggle"
+						type="button"
+						aria-label="Open navigation menu"
+						aria-controls="mobile-navigation"
+						aria-expanded="false"
+					>
+						<span aria-hidden="true"></span>
+						<span aria-hidden="true"></span>
+					</button>
+				</div>
+			</div>
+		</header>
+		<div
+			class="mobile-menu"
+			id="mobile-navigation"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Site navigation"
+			hidden
+		>
+			<nav aria-label="Mobile navigation">
 				<a href="/blog/">Writing</a>
+				<a href="/topics/">Topics</a>
 				<a href="/projects/">Projects</a>
 				<a href="/about/">About</a>
-				<a class="nav-community" href="/discussions/">Community <span aria-hidden="true">↗</span></a>
+				<a href="/search/">Search</a>
 			</nav>
-		</header>
+			<a class="mobile-portfolio" href="https://vyasdevgna.online/">Visit the portfolio ↗</a>
+		</div>
 		<main id="main"><slot /></main>
 		<footer class="site-footer">
-			<a class="wordmark" href="/"><span class="wordmark-mark">V</span><span>Vyas</span></a>
-			<p>Independent notes on software, research, and the things worth understanding.</p>
-			<div class="footer-links"><a href="/rss.xml">RSS</a><a href="/about/">About</a><a href="/search/">Search</a></div>
-			<small>© {new Date().getFullYear()} Vyas. Built for the open web.</small>
+			<div class="footer-brand">
+				<a class="wordmark" href="/" aria-label="Vyas home">
+					<img src="/vd-logo.png" alt="" width="40" height="40" loading="lazy" />
+					<span>Vyas</span>
+				</a>
+				<p>Independent writing on software, research, and the details worth understanding.</p>
+			</div>
+			<nav class="footer-column" aria-label="Writing">
+				<strong>Writing</strong>
+				<a href="/blog/">All writing</a>
+				<a href="/topics/">Topics</a>
+				<a href="/search/">Search</a>
+				<a href="/rss.xml">RSS feed</a>
+			</nav>
+			<nav class="footer-column" aria-label="Elsewhere">
+				<strong>Elsewhere</strong>
+				<a href="/about/">About Vyas</a>
+				<a href="/discussions/">Community (soon)</a>
+				<a href="https://vyasdevgna.online/">Portfolio ↗</a>
+				<a href="https://github.com/vyas-devgna">GitHub ↗</a>
+			</nav>
+			<small>© {new Date().getFullYear()} Devgna Vyas. Built for the open web.</small>
 		</footer>
+		<script is:inline>
+			const themeToggle = document.querySelector('#theme-toggle');
+			const themeColor = document.querySelector('#theme-color');
+			const root = document.documentElement;
+			const isDarkTheme = () => root.dataset.theme
+				? root.dataset.theme === 'dark'
+				: matchMedia('(prefers-color-scheme: dark)').matches;
+			const syncThemeControl = () => {
+				const dark = isDarkTheme();
+				themeToggle?.setAttribute('aria-pressed', String(dark));
+				themeToggle?.setAttribute('aria-label', dark ? 'Use light appearance' : 'Use dark appearance');
+				themeColor?.setAttribute('content', dark ? '#000000' : '#fbfbfd');
+			};
+			syncThemeControl();
+			themeToggle?.addEventListener('click', () => {
+				const theme = isDarkTheme() ? 'light' : 'dark';
+				root.dataset.theme = theme;
+				try {
+					localStorage.setItem('vyas-theme', theme);
+				} catch {
+					// The current page still changes if storage is unavailable.
+				}
+				syncThemeControl();
+			});
+
+			const menuToggle = document.querySelector('#menu-toggle');
+			const mobileMenu = document.querySelector('#mobile-navigation');
+			const menuLinks = [...(mobileMenu?.querySelectorAll('a') ?? [])];
+			const pageContent = document.querySelector('main');
+			const pageFooter = document.querySelector('footer');
+			const closeMenu = (restoreFocus = false) => {
+				if (!menuToggle || !mobileMenu || mobileMenu.hidden) return;
+				mobileMenu.hidden = true;
+				menuToggle.setAttribute('aria-expanded', 'false');
+				menuToggle.setAttribute('aria-label', 'Open navigation menu');
+				document.body.classList.remove('menu-open');
+				if (pageContent) pageContent.inert = false;
+				if (pageFooter) pageFooter.inert = false;
+				if (restoreFocus) menuToggle.focus();
+			};
+			menuToggle?.addEventListener('click', () => {
+				if (!mobileMenu) return;
+				const open = mobileMenu.hidden;
+				mobileMenu.hidden = !open;
+				menuToggle.setAttribute('aria-expanded', String(open));
+				menuToggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+				document.body.classList.toggle('menu-open', open);
+				if (pageContent) pageContent.inert = open;
+				if (pageFooter) pageFooter.inert = open;
+				if (open) menuLinks[0]?.focus();
+			});
+			mobileMenu?.addEventListener('click', (event) => {
+				if (event.target.closest('a')) closeMenu();
+			});
+			document.addEventListener('keydown', (event) => {
+				if (mobileMenu?.hidden) return;
+				if (event.key === 'Escape') {
+					closeMenu(true);
+					return;
+				}
+				if (event.key !== 'Tab' || !menuLinks.length) return;
+				const first = menuLinks[0];
+				const last = menuLinks[menuLinks.length - 1];
+				if (event.shiftKey && document.activeElement === first) {
+					event.preventDefault();
+					last.focus();
+				} else if (!event.shiftKey && document.activeElement === last) {
+					event.preventDefault();
+					first.focus();
+				}
+			});
+			matchMedia('(min-width: 881px)').addEventListener('change', () => closeMenu());
+		</script>
 	</body>
 </html>
