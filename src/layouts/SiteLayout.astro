@@ -1,9 +1,10 @@
 ---
 import '../styles/global.css';
 import '../styles/community.css';
-import { Image, getImage } from 'astro:assets';
+import { Image } from 'astro:assets';
 import logo from '../../public/vd-logo.png';
 import { author, BLOG_URL, serializeJsonLd } from '../lib/seo';
+import '../styles/polish.css';
 
 interface Props {
 	title: string;
@@ -30,8 +31,6 @@ const {
 } = Astro.props;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
-const favicon = await getImage({ src: logo, width: 64, height: 64, format: 'png' });
-const touchIcon = await getImage({ src: logo, width: 180, height: 180, format: 'png' });
 const siteStructuredData = { '@context': 'https://schema.org', '@graph': [author, {
   '@type': 'WebSite', '@id': BLOG_URL + '/#website', url: BLOG_URL + '/', name: 'Vyas', alternateName: 'Vyas — Devgna Vyas', inLanguage: 'en', publisher: { '@id': author['@id'] },
 }] };
@@ -71,8 +70,15 @@ const serializedJsonLd = [siteStructuredData, ...jsonLd].map(serializeJsonLd);
 		<meta name="twitter:image" content={ogImageUrl} />
 		<meta name="twitter:image:alt" content="Vyas — independent writing by Devgna Vyas" />
 		<link rel="alternate" type="application/rss+xml" title="Vyas · RSS" href="/rss.xml" />
-		<link rel="icon" type="image/png" href={favicon.src} />
-		<link rel="apple-touch-icon" href={touchIcon.src} />
+		<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+		<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-title" content="Vyas" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="application-name" content="Vyas" />
 		{serializedJsonLd.map((json) => <script type="application/ld+json" set:html={json} />)}
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -191,6 +197,8 @@ const serializedJsonLd = [siteStructuredData, ...jsonLd].map(serializeJsonLd);
 			<small>© {new Date().getFullYear()} Devgna Vyas. Built for the open web.</small>
 		</footer>
 		<script is:inline src="/scripts/site.js"></script>
+		<script is:inline src="/scripts/polish.js" defer></script>
+		<script is:inline src="/scripts/pwa.js" defer></script>
     <script src="../scripts/account-nav.ts"></script>
     <script src="../scripts/form-controls.ts"></script>
 	</body>

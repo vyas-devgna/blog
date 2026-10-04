@@ -1,0 +1,62 @@
+{
+  "id": "/",
+  "name": "Vyas — Notes on systems, software & research",
+  "short_name": "Vyas",
+  "description": "Independent notes on software, research, and the things worth understanding.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#07080f",
+  "theme_color": "#fbfbfd",
+  "categories": ["news", "education", "technology"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "All writing",
+      "short_name": "Writing",
+      "url": "/blog/?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Topics",
+      "short_name": "Topics",
+      "url": "/topics/?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "url": "/search/?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Community",
+      "short_name": "Community",
+      "url": "/discussions/?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
