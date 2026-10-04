@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import '../styles/fonts.css';
+import themeInitializer from '../../public/scripts/theme-init.js?raw';
 import '../styles/community.css';
 import { Image, getImage } from 'astro:assets';
 import logo from '../../public/vd-logo.png';
@@ -74,13 +76,9 @@ const serializedJsonLd = [siteStructuredData, ...jsonLd].map(serializeJsonLd);
 		<link rel="icon" type="image/png" href={favicon.src} />
 		<link rel="apple-touch-icon" href={touchIcon.src} />
 		{serializedJsonLd.map((json) => <script type="application/ld+json" set:html={json} />)}
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,300..700&family=Newsreader:opsz,wght@6..72,300..700&display=swap"
-			rel="stylesheet"
-		/>
-		<script is:inline src="/scripts/theme-init.js"></script>
+		<link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/instrument-serif-5a51946dff.woff2" />
+		<link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/inter-2c295d99e2.woff2" />
+		<script is:inline set:html={themeInitializer}></script>
 	</head>
 	<body>
 		<a class="skip-link" href="#main">Skip to content</a>
@@ -190,7 +188,7 @@ const serializedJsonLd = [siteStructuredData, ...jsonLd].map(serializeJsonLd);
 			</nav>
 			<small>© {new Date().getFullYear()} Devgna Vyas. Built for the open web.</small>
 		</footer>
-		<script is:inline src="/scripts/site.js"></script>
+		<script is:inline defer src="/scripts/site.js"></script>
     <script src="../scripts/account-nav.ts"></script>
     <script src="../scripts/form-controls.ts"></script>
 	</body>
