@@ -1,0 +1,98 @@
+---
+title: "Intrusion detection on a power budget: reading the numbers behind HERMES"
+description: "A rule filter and a compact neural network on two Raspberry Pi 5 nodes at 4.2 W each. What the results do and don't show, and the questions to ask of any edge-security benchmark."
+publishedAt: 2026-10-04T09:20:00+05:30
+tags: [Security, Networking, Systems]
+featured: true
+---
+
+Many network intrusion detection systems were designed for a machine with watts to spare. They assume a rack, a fan, and memory measured in tens of gigabytes. Put one at the edge of a network, on a board that has to run from a small power supply, and the design assumptions fail before the first packet arrives.
+
+That gap is what [HERMES](https://doi.org/10.1007/978-3-032-22062-2_24) was built for. Arpankumar G. Raval and I published it as a chapter in Springer's _Communications in Computer and Information Science_ (the _Soft Computing and Its Engineering Applications_ volume, from icSoftComp 2025). The paper is the authority on the details. This article explains the pattern behind it, reads the headline numbers the way a sceptical reviewer would, and ends with questions you can put to any edge-security claim, ours included.
+
+## The setup, as published
+
+From the abstract: HERMES is a hybrid AI/ML network intrusion detection system for ARM-based edge clusters. It combines a lightweight rule-based filter with a compact deep neural network, both optimised for ARMv8-A inference using TensorFlow Lite and ONNX Runtime. It runs on a two-node Raspberry Pi 5 cluster managed by K3s, a lightweight Kubernetes distribution.
+
+The evaluation used the CIC-IDS2017 and UNSW-NB15 datasets. On top of the recorded traffic, the authors injected ARP spoofing, port scans, SSH brute force and DNS tunnelling, plus synthetic zero-day variants of those attacks.
+
+The reported results:
+
+| Measure             | Reported                                                        |
+| ------------------- | --------------------------------------------------------------- |
+| Accuracy            | 94.7%                                                           |
+| F1 score            | 0.926                                                           |
+| ROC AUC             | 0.99                                                            |
+| False positive rate | 0.9%                                                            |
+| Throughput          | 15,000 packets per second                                       |
+| Average latency     | 2.4 ms                                                          |
+| Power               | 4.2 W per node, reported as 67% less than typical x86 solutions |
+
+## Why combine a rule filter with a neural network
+
+The paper describes how HERMES wires the two parts together. What follows is the general reasoning for pairing them, and it is the useful part if you are building something similar.
+
+Rules and learned models fail in opposite ways. A rule is exact, cheap and explainable. It will catch a signature it knows every time, and it will say precisely why. It is blind to anything it has not been written for. A neural network generalises: it can flag traffic that looks like an attack without matching a known pattern. It costs more per decision, it is harder to explain, and it will sometimes be wrong in ways nobody wrote down.
+
+On a constrained board the cost difference decides the architecture. Spending model inference on traffic that a rule can settle is waste you pay for in watts. Letting rules be the only line of defence leaves you exposed to variants. Pairing them means each part handles the cases it is cheapest and most reliable for.
+
+## Getting a neural network onto an ARM board
+
+Both runtimes named in the abstract take a trained model and execute it efficiently on a CPU. The step that usually matters most for the energy budget is quantisation: storing weights, and often activations, as 8-bit integers instead of 32-bit floats. That cuts model size to roughly a quarter and lets the CPU use integer instructions.
+
+The public description of HERMES mentions quantised inference. This is the standard TensorFlow Lite recipe for full-integer quantisation, shown as a reference for the technique rather than as the paper's exact pipeline:
+
+```python
+import numpy as np
+import tensorflow as tf
+
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+def representative_data():
+    # A few hundred real feature vectors, so the converter can pick value ranges.
+    for row in calibration_features[:500]:
+        yield [row.astype(np.float32)[None, :]]
+
+converter.representative_dataset = representative_data
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter.inference_input_type = tf.int8
+converter.inference_output_type = tf.int8
+
+open("detector_int8.tflite", "wb").write(converter.convert())
+```
+
+The calibration data matters more than people expect. If the representative sample does not look like production traffic, the chosen ranges are wrong and accuracy drops in ways the float model never showed. Always re-run your evaluation on the quantised model, never on the original.
+
+## Reading the numbers like a reviewer
+
+A single accuracy figure says very little about an intrusion detector. Here is what each number does and does not tell you.
+
+**Accuracy (94.7%).** Network traffic is mostly benign. A detector that labels everything benign can score very high accuracy on a dataset that is mostly benign. That is why the paper also reports F1, ROC AUC and a false positive rate. Read accuracy last.
+
+**False positive rate (0.9%).** This looks small and may not be. A rate is only meaningful alongside its unit. If the unit were a single packet and every packet at 15,000 per second were scored independently, 0.9% would be 135 false alerts a second, which no operator could use. Deployed detectors usually score flows or time windows rather than packets, and both datasets above are distributed as labelled flow-level records as well as raw captures, so the number may mean something far more manageable. The point is not that the figure is wrong. It is that you cannot judge it without knowing what a "decision" is, and every IDS result should state that.
+
+**Latency (2.4 ms average).** An average hides the tail. For inline detection the question is what the 99th percentile looks like when the link is busy, because a slow decision is a dropped or delayed packet.
+
+**Throughput (15,000 packets per second).** Ask whether that was sustained or a peak, and whether detection quality was measured at that load or separately.
+
+**Power (4.2 W per node).** Ask whether it is measured under load or idle, and what was included. With two nodes the cluster total is about 8.4 W if both draw that. The "67% less than typical x86 solutions" claim implies a comparison figure of around 12.7 W (4.2 divided by 0.33), which is plain arithmetic on the reported percentage. The paper says what it was compared against.
+
+## The hard part is generalisation
+
+The abstract mentions synthetic zero-day variants. That phrase deserves attention in any IDS paper. A variant produced by modifying a known attack tests whether the system tolerates variation. It does not tell you how the system behaves against an attack nobody has seen, which tends to differ in ways the test author did not think of.
+
+Honest generalisation testing is mostly about the split. Hold out entire attack families, not random rows. Split by time. Train on one dataset and test on another. A model that has seen near-duplicates of the test rows will look excellent and then disappoint in deployment. The paper also analyses adversarial resilience, and that is the other half of the same question: an attacker who knows there is a model can shape traffic to it.
+
+## Questions to ask of any edge-security benchmark
+
+- What is the unit of a decision: packet, flow, window?
+- How was the data split, and could the test set contain near-duplicates of the training set?
+- What is the class balance, and does the metric survive it?
+- What does the false positive rate mean in alerts per hour at realistic load?
+- Is latency reported as an average or as a tail?
+- Was power measured under load, and what hardware was it compared with?
+- How was the model evaluated after quantisation?
+- What did the zero-day claim actually test?
+
+Hold your own work to these before you hold anyone else's. A system that survives them is worth deploying.

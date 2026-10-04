@@ -5,6 +5,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   X-Frame-Options: DENY
+  Speculation-Rules: "/speculation.json"
 
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
@@ -21,3 +22,7 @@
 
 /icons/*
   Cache-Control: public, max-age=2592000
+
+/speculation.json
+  Content-Type: application/speculationrules+json
+  Cache-Control: public, max-age=3600

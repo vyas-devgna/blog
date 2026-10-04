@@ -745,3 +745,163 @@ button:disabled {
     animation-duration: 1.6s !important;
   }
 }
+
+/* ---------- share + related reading (article footer) ---------- */
+.share {
+  display: grid;
+  gap: 16px;
+  margin: 56px 0 0;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--line);
+}
+.share h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.share ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.share .pill {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 15px;
+}
+.related {
+  margin: 64px 0 0;
+}
+.related h2 {
+  margin: 4px 0 20px;
+  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+}
+
+/* Home: the featured "Start here" shelf reuses the related-card grid, a touch roomier. */
+.start-here {
+  padding-bottom: 0;
+}
+.start-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+/* Task lists in articles ("- [ ] item"): a checkbox is the marker, so drop the bullet. */
+.article-body li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+.article-body li > input[type="checkbox"] {
+  margin: 0 0.65em 0 0;
+  vertical-align: -0.28em;
+}
+.article-body li > input[type="checkbox"]:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* ---------- comments & community notices: calm, not alarming ---------- */
+.article-comments {
+  margin: 64px 0 0;
+  padding: clamp(20px, 3vw, 32px);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.article-comments .section-heading {
+  margin-bottom: 14px;
+}
+.article-comments h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  letter-spacing: -0.035em;
+}
+.community-status {
+  line-height: 1.5;
+}
+/* A failed request is information, not an emergency: a quiet notice with a marker. */
+.community-status[data-error="true"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ochre) 12%, var(--bg));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ochre) 38%, transparent);
+  color: var(--ink-2);
+}
+.community-status[data-error="true"]::before {
+  content: "i";
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--ochre);
+  color: #1d1d1f;
+  font: italic 700 13px/1 var(--serif-accent, Georgia, serif);
+}
+:root[data-theme="dark"] .community-status[data-error="true"] {
+  color: var(--ink-2);
+}
+.community-auth-prompt {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  line-height: 1.5;
+}
+
+/* ---------- tables in articles: quiet, scannable, never wrapping a label mid-word ---------- */
+.article-body table {
+  border: 0;
+  font-size: 0.8em;
+  line-height: 1.45;
+}
+.article-body th,
+.article-body td {
+  padding: 12px 16px 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.article-body th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-2);
+  color: var(--muted);
+  font-size: 0.86em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.article-body th:first-child,
+.article-body td:first-child {
+  min-width: 4.5em;
+  padding-right: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.article-body tbody tr {
+  transition: background-color 0.2s;
+}
+@media (hover: hover) {
+  .article-body tbody tr:hover {
+    background: color-mix(in srgb, var(--ink) 4%, transparent);
+  }
+}

@@ -1,0 +1,94 @@
+---
+title: "Before you connect an MCP server: a security checklist from the spec"
+description: "Seven attacks the Model Context Protocol's own security guidance names, what each one means in practice, and what to check whether you connect servers or build them."
+publishedAt: 2026-10-04T10:00:00+05:30
+tags: [AI agents, Security]
+featured: true
+---
+
+Connecting an MCP server to a coding agent is, mechanically, installing software that can talk to your model and often to your accounts. It takes one line of JSON. That ratio of effort to consequence is why the protocol's maintainers wrote a dedicated [Security Best Practices](https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices) page, and why it is worth reading even if you never implement the protocol.
+
+This is a field guide to that page. It covers seven classes of attack, with one proxy-specific escalation path folded into the sixth. For each one I'll say what it is in plain terms, who is responsible for stopping it, and what to check. Where I add advice that the page does not make, I'll say so.
+
+## Who is responsible
+
+Two roles come up repeatedly, and the controls differ.
+
+- **Operators and builders** write or host MCP servers, and write clients. Most of the page's MUST and SHOULD language is addressed to them.
+- **Users** pick which servers to connect and what to let them touch. The page speaks to you less directly, but several attacks only work because a user accepted something without seeing it.
+
+## The seven attacks
+
+### 1. Confused deputy
+
+An MCP _proxy_ server sits between a client and a third-party API such as a calendar or a code host. If the proxy uses one static OAuth client ID with the third-party authorization server, lets clients register themselves dynamically, and the third-party server remembers consent in a cookie, an attacker can register a client with their own redirect URI and send you a link. Your browser still holds the consent cookie, so the consent screen is skipped and the authorization code goes to the attacker.
+
+The page's requirement is that proxy servers **MUST** collect consent per client, before forwarding to the third party. The consent page has to name the requesting client, show the scopes and the exact registered redirect URI, defend against CSRF, and refuse to be framed. Redirect URIs must match by exact string, not pattern. The `state` parameter must be random, single-use and short-lived, and the cookie that tracks it must not be set until after the user approves.
+
+**You:** if a server asks you to authorize a third party, check that the consent screen belongs to the MCP server and names the client you meant to connect.
+
+### 2. Token passthrough
+
+This is a server that accepts a token from a client and forwards it to a downstream API without checking that the token was issued _to that server_. The page calls it an anti-pattern and states that servers **MUST NOT** accept tokens that were not explicitly issued for them.
+
+The reasons are practical. Rate limiting and monitoring downstream depend on the token's audience. Audit logs show the wrong identity. A stolen token can use the server as a laundering proxy.
+
+**Builders:** validate the audience of every inbound token.
+
+### 3. Server-side request forgery in OAuth discovery
+
+During authorization, a client fetches URLs that come from the server's own metadata. A malicious server can point those at `http://169.254.169.254/` for cloud credentials, at `localhost` services, at private ranges, or at a domain that resolves to a harmless address during validation and an internal one when the request is made.
+
+Clients running on a server are told to require HTTPS (loopback excepted for development), block private and reserved ranges, validate each redirect hop instead of following blindly, and consider an egress proxy. The page makes one point that I'll repeat because it saves people from a classic mistake: _don't write the IP validation yourself._ Attackers use octal, hex and IPv4-mapped IPv6 encodings that hand-rolled parsers miss. Pin DNS results between check and use.
+
+**Builders of clients:** treat every URL from a server as hostile input.
+
+### 4. Session hijacking
+
+Two variants. In the first, an attacker who knows a session ID sends events to a different server instance that shares a queue, and the legitimate client receives the payload as if it were a normal asynchronous response. In the second, the attacker simply replays a stolen session ID.
+
+The requirements: servers that implement authorization **MUST** verify every inbound request and **MUST NOT** use sessions for authentication. Session IDs must be secure and non-deterministic, and should be bound to user-specific information, for example keyed as `<user_id>:<session_id>` with the user ID derived from the verified token rather than supplied by the client.
+
+### 5. Local server compromise
+
+A local MCP server is a program that runs on your machine with your privileges. The risk is in how it gets there: a malicious startup command in a shared client configuration, a poisoned package, or an unauthenticated server left listening on localhost and reached through DNS rebinding. The page's examples are a command that pipes your SSH key to a remote host and one that deletes system files, both hidden behind a plausible package name.
+
+Clients that support one-click installation **MUST** show the exact command, untruncated, mark it as code execution on your system, and require explicit approval. They **SHOULD** sandbox the process with minimal privileges. Servers meant to run locally **SHOULD** use `stdio` or, if they use HTTP, require an authorization token or a Unix domain socket.
+
+**You:** read the command before you click approve. If it contains `sudo`, a pipe to `curl`, or a path in your home directory, stop.
+
+### 6. Authorization URL validation
+
+A server supplies the URL a client opens in a browser to start sign-in. If the client passes it straight to `window.open()` or to a shell command, a `javascript:` URL gives the server code execution inside the client, and a crafted string can inject shell commands. Clients **MUST** allow only `http` and `https` (with plain `http` only for loopback in development), **MUST** reject `javascript:`, `data:`, `file:`, `vbscript:` and similar, and **MUST NOT** open URLs through a shell.
+
+The page also describes how this combines with a local proxy that spawns `stdio` servers: a cross-site scripting bug in the client can steal the proxy's token and use it to launch arbitrary commands. The `stdio` transport is not the flaw; the escalation path is.
+
+### 7. Scope minimization
+
+A token that carries `files:*` or `admin:*` because the server listed every scope and the client asked for them all makes every leak catastrophic. The page asks for progressive, least-privilege scopes: start with a minimal set for discovery and reads, elevate through a targeted challenge when a privileged operation is first attempted, and accept down-scoped tokens. Common mistakes it lists include wildcard scopes and returning the whole scope catalogue in every challenge.
+
+**You:** when a consent screen lists far more than the task needs, that is information about the server.
+
+## A checklist for people who connect servers
+
+The page does not address you directly in this form. The questions below are my own, derived from the risks above.
+
+- **Who wrote it, and where does it run?** Prefer a pinned version from a source you can inspect over a floating `latest`.
+- **What is the exact startup command?** Read the whole line, including arguments.
+- **What can that process touch?** A server that only needs one repository should not run with access to your home directory. A container or a restricted user costs minutes.
+- **What do the scopes and tokens grant?** Use credentials scoped to the task, and prefer read-only when the task is reading.
+- **Is it local-only?** If it listens on a port, who else on the machine can reach it?
+- **What does it return to the model?** Everything a server sends back, including tool descriptions and results, is text the model will read. That follows from how models work, not from the page, and it connects to the memory problem in [the previous article on agent memory](/blog/agent-memory-is-an-attack-surface/): treat server output as untrusted input.
+
+## A checklist for people who build them
+
+- [ ] Reject any token that was not issued for your server, and never forward one you have not validated.
+- [ ] Per-client consent before any third-party redirect, with exact `redirect_uri` matching.
+- [ ] Single-use, short-lived `state`, tracked server-side, set only after consent.
+- [ ] Non-guessable session IDs bound to a verified user, and no sessions standing in for authentication.
+- [ ] Offer `stdio` for local servers; if HTTP, require a token or use a socket.
+- [ ] Publish the narrowest scope set that works; return targeted scope challenges.
+- [ ] Reject non-`http(s)` authorization URLs; never shell out to open a link.
+- [ ] Log scope elevations with correlation IDs.
+
+The most useful sentence on the page is an unglamorous one from the scope section: poor scope design "increases token compromise impact, elevates user friction, and obscures audit trails." That is the entire case for caring, and for most of the other six as well.
