@@ -26,6 +26,7 @@
 @view-transition {
   navigation: auto;
 }
+/* The header is a persistent layer: only the new one is ever shown, so it can't ghost or slide. */
 .site-header {
   view-transition-name: site-header;
 }
@@ -36,6 +37,27 @@
 }
 ::view-transition-group(site-header) {
   animation: none;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+/* Reserve the scrollbar's space on every page, so centred content doesn't shift sideways when
+   moving between a short page and a long one. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Header account area: use the remembered state until the session check finishes (see theme-init.js). */
+html[data-auth="in"] .nav-actions [data-anonymous-nav] {
+  display: none !important;
+}
+/* community.css forces [hidden] to display:none !important, so this must out-rank it. */
+html[data-auth="in"] .nav-actions [data-account-menu][hidden] {
+  display: block !important;
 }
 
 /* ---------- one focus ring ---------- */

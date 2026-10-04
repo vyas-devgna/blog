@@ -1,5 +1,48 @@
 export {};
 
+const AUTH_HINT = "vyas-auth";
+const initialsOf = (name: string) =>
+  String(name || "Vyas")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toLocaleUpperCase();
+
+function setAuthState(value: "in" | "out") {
+  const root = document.documentElement as HTMLElement | undefined;
+  if (root) root.dataset.auth = value;
+}
+
+function readHint(): { in: boolean; name?: string } | null {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_HINT) || "null");
+  } catch {
+    return null;
+  }
+}
+function writeHint(value: { in: boolean; name?: string } | null) {
+  try {
+    if (value) localStorage.setItem(AUTH_HINT, JSON.stringify(value));
+    else localStorage.removeItem(AUTH_HINT);
+  } catch {
+    /* the header just settles after the session check */
+  }
+}
+
+// First paint: show the last known identity right away so the header never visibly jumps.
+const cached = readHint();
+if (cached?.in) {
+  setAuthState("in");
+  const name = document.querySelector<HTMLElement>("[data-account-name]");
+  if (name && cached.name) name.textContent = cached.name;
+  const initials = document.querySelector<HTMLElement>(
+    "[data-account-initials]",
+  );
+  if (initials) initials.textContent = initialsOf(cached.name || "");
+}
+
 async function refreshAccountNav() {
   try {
     const response = await fetch(
@@ -12,6 +55,10 @@ async function refreshAccountNav() {
     if (!response.ok) return;
     const session = await response.json();
     const signedIn = Boolean(session?.user);
+    setAuthState(signedIn ? "in" : "out");
+    writeHint(
+      signedIn ? { in: true, name: session.user.name || "Your account" } : null,
+    );
     for (const link of document.querySelectorAll<HTMLElement>(
       "[data-anonymous-nav]",
     ))
@@ -94,6 +141,7 @@ document
         body: "{}",
       });
       if (!response.ok) throw new Error("Sign out failed. Please retry.");
+      writeHint(null);
       location.assign("/");
     } catch {
       const status = document.querySelector<HTMLElement>(
