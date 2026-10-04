@@ -9,5 +9,12 @@ export default defineConfig({
   output: "server",
   adapter: cloudflare({ imageService: "compile" }),
   integrations: [mdx(), sitemap()],
+  markdown: {
+    shikiConfig: {
+      themes: { light: "github-light", dark: "github-dark" },
+      defaultColor: false,
+      wrap: true,
+    },
+  },
   build: { inlineStylesheets: "auto" },
 });
