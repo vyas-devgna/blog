@@ -35,13 +35,20 @@
     btn.type = "button";
     btn.className = "field-reveal";
     btn.textContent = "Show";
-    btn.setAttribute("aria-label", "Show password");
+    btn.setAttribute(
+      "aria-label",
+      `Show ${input.labels?.[0]?.textContent?.trim().toLowerCase() || "password"}`,
+    );
+    btn.setAttribute("aria-controls", input.id);
     btn.setAttribute("aria-pressed", "false");
     btn.addEventListener("click", () => {
       const show = input.type === "password";
       input.type = show ? "text" : "password";
       btn.textContent = show ? "Hide" : "Show";
-      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      btn.setAttribute(
+        "aria-label",
+        `${show ? "Hide" : "Show"} ${input.labels?.[0]?.textContent?.trim().toLowerCase() || "password"}`,
+      );
       btn.setAttribute("aria-pressed", String(show));
       input.focus({ preventScroll: true });
     });
