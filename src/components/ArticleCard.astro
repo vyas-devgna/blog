@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { coverForSlug } from '../lib/cover';
+import { coverForSlug, coverSrcSet } from '../lib/cover';
 import { getReadingTime } from '../lib/posts';
 import { topicSlug } from '../lib/topics';
 
@@ -20,7 +20,7 @@ const published = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone:
 <article class="article-card">
 	<a class="article-card-link" href={'/blog/' + post.id + '/'}>
 		<div class="card-cover">
-			<img src={cover} alt="" width="1200" height="760" loading="lazy" decoding="async" />
+			<img src={cover} srcset={coverSrcSet(cover)} sizes="(max-width: 700px) calc(100vw - 48px), (max-width: 1100px) 45vw, 400px" alt="" width="1200" height="760" loading="lazy" decoding="async" />
 		</div>
 		<div class="card-copy">
 			<p class="article-label">

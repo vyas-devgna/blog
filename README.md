@@ -8,7 +8,7 @@ Astro publication and small community platform for `blog.vyasdevgna.online`. Art
 - The community schema and nine default categories are applied to Neon `main`.
 - Email/password auth requires one-time-code email verification. Google uses Neon’s shared OAuth provider and the SDK’s challenge-verified callback. Neon SMTP accepted test and verification messages.
 - Email signup is enabled with the Cloudflare Turnstile server secret installed. The site key is public configuration; the secret is not stored in Git.
-- The moderator account still needs to sign up and verify its email before its application profile can be promoted.
+- The verified moderator account is active; moderation permissions are checked on the server.
 - In-app notifications are available. Optional community email notifications remain off until `RESEND_API_KEY` is configured on the Worker.
 - Independent off-site backups and a disposable restore drill remain open; see [backup and restore](docs/BACKUPS.md).
 
@@ -28,7 +28,7 @@ Validate with `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build`.
 
 ## Publishing an article
 
-Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`, and `publishedAt`; optional fields include `updatedAt`, `tags`, `featured`, `cover`, and `canonical`. Keep `draft: true` until publication. Article data and assets stay in Git and do not use the community database.
+Add a `.md` or `.mdx` file under `src/content/blog/` with `title`, `description`, and `publishedAt`; optional fields include `updatedAt`, `tags`, `featured`, `cover`, and `canonical`. Keep `draft: true` until publication. Article data and assets stay in Git and do not use the community database. Each build automatically updates article routes, metadata, structured data, social cards, RSS, topic archives, related reading, the JSON portfolio feed and the sitemap. See [publishing](docs/PUBLISHING.md). Publishing remains manual.
 
 ## Architecture
 

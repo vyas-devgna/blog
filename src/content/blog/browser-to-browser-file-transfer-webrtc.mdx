@@ -3,6 +3,8 @@ title: "How browser-to-browser file transfer works (and where WebRTC gives up)"
 description: "Signalling, ICE, NAT traversal, data channels, chunking and backpressure: the mechanics of sending a file between two browsers with no upload server, and what breaks."
 publishedAt: 2026-10-04T08:40:00+05:30
 tags: [Web, Networking]
+cover: "/covers/browser-to-browser-file-transfer-webrtc-18b4cc8316-1200.webp"
+coverAlt: "Paper parcels travel directly between two blue glass vessels across a rocky gap."
 ---
 
 Sending a file from your phone to your laptop through a cloud service means the file travels to a data centre and back. Two browsers can skip the detour and talk directly, with traffic encrypted end to end between them. The protocol has existed for years. What is surprising is how many separate problems have to be solved before the first byte moves.

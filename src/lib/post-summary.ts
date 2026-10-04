@@ -28,7 +28,10 @@ export function toPostSummary(post: SummarySource, site: URL | string) {
     tags: post.data.tags,
     featured: post.data.featured,
     cover: post.data.cover
-      ? new URL(post.data.cover, site).toString()
+      ? new URL(
+          post.data.cover.replace(/-1200\.webp$/, "-800.webp"),
+          site,
+        ).toString()
       : coverForSlug(post.id),
   };
 }

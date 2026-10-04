@@ -2,7 +2,7 @@
 
 ## Indexing policy
 
-The publication sitemap advertises only the home, about, projects, writing, topics and discussions index routes. Account, verification, moderation, notifications, internal search, user profiles and error pages are excluded. Private and search pages carry `noindex, follow`; robots.txt allows crawlers to read that directive. Drafts and posts dated in the future are excluded from routes, feeds and archives. A scheduled post needs a build after its publication date.
+The publication sitemap advertises the home, about, projects, writing, topics and discussions index routes, plus every published article and its topic archives. Account, verification, moderation, notifications, internal search, user profiles and error pages are excluded. Private and search pages carry `noindex, follow`; robots.txt allows crawlers to read that directive. Drafts and posts dated in the future are excluded from routes, feeds and archives. A scheduled post needs a build after its publication date.
 
 `community-sitemap.xml` is separate from the static publication sitemap. It includes only visible, explicitly indexable threads in active categories with active authors. Thread pages apply the same indexing conditions. New members' threads remain non-indexable until the existing trust/moderation policy permits them. An unavailable database returns HTTP 503 with Retry-After, rather than advertising an empty successful sitemap. Profiles remain non-indexable.
 
@@ -16,7 +16,7 @@ Canonical metadata, social previews, image dimensions, descriptive titles, RSS d
 
 ## Search Console
 
-The existing `sc-domain:vyasdevgna.online` property covers portfolio and blog subdomains. Braids has its own existing submitted sitemap and is outside this change. Submit the portfolio sitemap, blog sitemap index and community sitemap separately after deployment. Google controls crawling, indexing and rankings; a sitemap or Lighthouse SEO score does not guarantee indexing.
+The existing `sc-domain:vyasdevgna.online` property covers portfolio and blog subdomains. Braids has its own existing submitted sitemap and is outside this change. The portfolio sitemap and blog sitemap index were submitted through the existing verified Google property on 2026-10-04. The empty community sitemap should be submitted when there are eligible public threads. Google controls crawling, indexing and rankings; a sitemap or Lighthouse SEO score does not guarantee indexing.
 
 ## Verification
 

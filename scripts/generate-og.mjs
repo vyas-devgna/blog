@@ -1,13 +1,14 @@
 // Renders a 1200x630 social card (Open Graph / X / LinkedIn) for every published article into
-// public/og/<slug>.png. Runs before `astro build`; the output is generated, not committed.
+// public/og/<slug>.jpg. Runs before `astro build`; the output is generated, not committed.
 import {
   mkdirSync,
+  existsSync,
   readFileSync,
   readdirSync,
   rmSync,
-  writeFileSync,
 } from "node:fs";
 import satori from "satori";
+import sharp from "sharp";
 import { Resvg } from "@resvg/resvg-js";
 import { publishedPosts } from "../src/lib/front-matter.mjs";
 
@@ -41,6 +42,7 @@ const h = (type, props, ...children) => ({
 });
 
 function card(post) {
+  const artwork = existsSync(`src/assets/covers/${post.slug}.png`);
   const seed = hash(post.slug);
   const [a, b, c] = [0, 1, 2].map(
     (i) => palette[(seed >>> (i * 5)) % palette.length],
@@ -66,9 +68,20 @@ function card(post) {
         padding: "64px 72px",
         color: "#f5f5f7",
         fontFamily: "Inter",
-        backgroundImage: background,
+        backgroundColor: "#0b0d1a",
+        ...(!artwork ? { backgroundImage: background } : {}),
       },
     },
+    ...(artwork
+      ? [
+          h("img", {
+            src: `data:image/png;base64,${readFileSync(`src/assets/covers/${post.slug}.png`).toString("base64")}`,
+            width: 1200,
+            height: 760,
+            style: { position: "absolute", left: 0, top: -65, opacity: 0.36 },
+          }),
+        ]
+      : []),
     h(
       "div",
       {
@@ -143,7 +156,9 @@ for (const post of posts) {
   const png = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } })
     .render()
     .asPng();
-  writeFileSync(`${OUT}/${post.slug}.png`, png);
+  await sharp(png)
+    .jpeg({ quality: 84, mozjpeg: true })
+    .toFile(`${OUT}/${post.slug}.jpg`);
 }
 console.log(
   `Generated ${posts.length} social cards in ${OUT}/ (${readdirSync(OUT).length} files).`,

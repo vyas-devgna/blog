@@ -4,15 +4,13 @@ What is built, how to get the articles in front of readers, and what to avoid.
 
 ## Already in place
 
-- Per-article social cards (`/og/<slug>.png`), canonical URLs, `BlogPosting` and breadcrumb structured data, a sitemap with real `lastmod` dates, RSS, `llms.txt`, and `/posts.json` (feeds the portfolio).
+- Per-article social cards (`/og/<slug>.jpg`), canonical URLs, `BlogPosting` and breadcrumb structured data, a sitemap with real `lastmod` dates, RSS, `llms.txt`, and `/posts.json` (feeds the portfolio).
 - Instant navigation (speculation rules), an installable app, share buttons and related reading on every article, and a "Start here" shelf on the home page driven by `featured: true`.
-- IndexNow: run `pnpm indexnow` after a deploy to notify Bing, Yandex and other participating engines.
+- IndexNow runs after `pnpm deploy` succeeds; `pnpm indexnow` can retry notifications separately. Acceptance is not an indexing guarantee.
 
-## Search engines (needs your accounts)
+## Search engines
 
-1. Verify the site in Google Search Console and Bing Webmaster Tools.
-2. Submit `https://blog.vyasdevgna.online/sitemap-index.xml` to both.
-3. Watch the Performance report for the queries each article actually earns, and tighten titles and descriptions around them.
+Google Search Console already has the verified domain property; the blog and portfolio sitemaps were submitted on 2026-10-04. Inspect their processing status and watch actual query impressions before changing titles. Google controls indexing and rankings. IndexNow reaches participating engines; it does not notify Google. Bing Webmaster verification is optional additional reporting, not a prerequisite for IndexNow.
 
 Expect weeks, not days. A new site has no history, so early traffic comes mostly from sharing, not search.
 

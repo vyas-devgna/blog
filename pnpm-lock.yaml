@@ -253,6 +253,9 @@ importers:
       satori:
         specifier: ^0.35.0
         version: 0.35.0
+      sharp:
+        specifier: 0.35.4
+        version: 0.35.4(@types/node@24.19.1)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

@@ -32,3 +32,6 @@ pnpm-debug.log*
 
 # generated social cards (scripts/generate-og.mjs)
 public/og/
+
+# generated responsive artwork
+public/covers/

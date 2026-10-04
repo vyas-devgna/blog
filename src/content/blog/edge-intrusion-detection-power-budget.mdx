@@ -1,98 +1,105 @@
 ---
 title: "Intrusion detection on a power budget: reading the numbers behind HERMES"
-description: "A rule filter and a compact neural network on two Raspberry Pi 5 nodes at 4.2 W each. What the results do and don't show, and the questions to ask of any edge-security benchmark."
+description: "Inside HERMES: a two-stage intrusion detector on Raspberry Pi 5. Architecture, measured trade-offs, and a careful reconciliation of the paper’s tables and claims."
 publishedAt: 2026-10-04T09:20:00+05:30
 tags: [Security, Networking, Systems]
 featured: true
+cover: "/covers/edge-intrusion-detection-power-budget-d2d2ec971b-1200.webp"
+coverAlt: "A small copper mechanism separates blue and amber particles under a faint energy filament."
+updatedAt: 2026-10-04T05:40:08Z
 ---
 
-Many network intrusion detection systems were designed for a machine with watts to spare. They assume a rack, a fan, and memory measured in tens of gigabytes. Put one at the edge of a network, on a board that has to run from a small power supply, and the design assumptions fail before the first packet arrives.
+A small edge gateway has to inspect traffic while leaving enough CPU, memory and power for the services it protects. HERMES explores that constraint with a rule filter in front of a compact neural network, deployed on two Raspberry Pi 5 nodes.
 
-That gap is what [HERMES](https://doi.org/10.1007/978-3-032-22062-2_24) was built for. Arpankumar G. Raval and I published it as a chapter in Springer's _Communications in Computer and Information Science_ (the _Soft Computing and Its Engineering Applications_ volume, from icSoftComp 2025). The paper is the authority on the details. This article explains the pattern behind it, reads the headline numbers the way a sceptical reviewer would, and ends with questions you can put to any edge-security claim, ours included.
+Arpankumar G. Raval and I are the authors of [HERMES: Design and Deployment of a Hybrid AI/ML Network Security System on ARM Clusters for Edge Environments](https://doi.org/10.1007/978-3-032-22062-2_24). This article was revised against the full eight-page research manuscript, rather than relying only on the published abstract. Section and table references below refer to that manuscript. The published chapter is a separate version; its abstract and the manuscript do not agree on every number.
 
-## The setup, as published
+The useful story is the architecture and its measured trade-offs. The numerical discrepancies also deserve a clear explanation: reported results, arithmetic derived from tables, and unresolved reporting questions are different kinds of evidence.
 
-From the abstract: HERMES is a hybrid AI/ML network intrusion detection system for ARM-based edge clusters. It combines a lightweight rule-based filter with a compact deep neural network, both optimised for ARMv8-A inference using TensorFlow Lite and ONNX Runtime. It runs on a two-node Raspberry Pi 5 cluster managed by K3s, a lightweight Kubernetes distribution.
+## The pipeline: settle easy cases before inference
 
-The evaluation used the CIC-IDS2017 and UNSW-NB15 datasets. On top of the recorded traffic, the authors injected ARP spoofing, port scans, SSH brute force and DNS tunnelling, plus synthetic zero-day variants of those attacks.
+Section IV and Figure 1 describe two stages. Incoming traffic first passes through a curated rule filter based on Snort community signatures. Traffic the rules cannot classify conclusively goes to the learned detector. Known threats can trigger an immediate alert; anomalous traffic detected by the model triggers a second alert path.
 
-The reported results:
+The manuscript describes a three-layer fully connected DNN with 64, 32 and 16 neurons, ReLU activations and dropout. Training happens offline. The implementation reports full-integer quantisation through TensorFlow Lite, a model-size reduction from about 800 KB to 200 KB, and export to ONNX for inference through ONNX Runtime on ARM. Those are descriptions of the prototype, not a complete reproducible model specification: the feature schema, output layer, training configuration and conversion artefacts would also be needed to reproduce it.
 
-| Measure             | Reported                                                        |
-| ------------------- | --------------------------------------------------------------- |
-| Accuracy            | 94.7%                                                           |
-| F1 score            | 0.926                                                           |
-| ROC AUC             | 0.99                                                            |
-| False positive rate | 0.9%                                                            |
-| Throughput          | 15,000 packets per second                                       |
-| Average latency     | 2.4 ms                                                          |
-| Power               | 4.2 W per node, reported as 67% less than typical x86 solutions |
+The reason for putting rules first is practical. If an inexpensive check settles a case, it can avoid an inference. The model provides a second path for traffic without a matching signature. Whether that saves work depends on the traffic mix and how often rules can make a conclusive decision.
 
-## Why combine a rule filter with a neural network
+## What ran on the cluster
 
-The paper describes how HERMES wires the two parts together. What follows is the general reasoning for pairing them, and it is the useful part if you are building something similar.
+Section V describes two Raspberry Pi 5 Model B boards, each with a quad-core Cortex-A76 at 2.4 GHz and 8 GB RAM. The nodes ran Ubuntu Server 22.04, Docker containers and K3s, connected through a Gigabit Ethernet switch with port mirroring.
 
-Rules and learned models fail in opposite ways. A rule is exact, cheap and explainable. It will catch a signature it knows every time, and it will say precisely why. It is blind to anything it has not been written for. A neural network generalises: it can flag traffic that looks like an attack without matching a known pattern. It costs more per decision, it is harder to explain, and it will sometimes be wrong in ways nobody wrote down.
+Each node hosted a Detection Engine, Data Aggregator and Model Manager. The detection code used C/C++, libpcap and a Hyperscan-based rule filter. Redis handled shared alerts and counters; the Python model manager distributed versioned model and rule updates using gRPC. The paper reports a 2 GB memory limit and a CPU limit for the detection container.
 
-On a constrained board the cost difference decides the architecture. Spending model inference on traffic that a rule can settle is waste you pay for in watts. Letting rules be the only line of defence leaves you exposed to variants. Pairing them means each part handles the cases it is cheapest and most reliable for.
+Power was sampled with a Keysight N6705C at 100 Hz. The manuscript reports an average inference time of about 50 microseconds per packet separately from end-to-end processing latency. These measurements describe different boundaries: inference time is not the complete capture, filtering, queueing and response time.
 
-## Getting a neural network onto an ARM board
+The threat model assumes trusted, hardened nodes, secure boot and encrypted model storage. Physical capture is outside the study. Those assumptions should be checked for a real deployment; the evaluation does not demonstrate that every installation satisfies them.
 
-Both runtimes named in the abstract take a trained model and execute it efficiently on a CPU. The step that usually matters most for the energy budget is quantisation: storing weights, and often activations, as 8-bit integers instead of 32-bit floats. That cuts model size to roughly a quarter and lets the CPU use integer instructions.
+## How the evaluation was described
 
-The public description of HERMES mentions quantised inference. This is the standard TensorFlow Lite recipe for full-integer quantisation, shown as a reference for the technique rather than as the paper's exact pipeline:
+Section VI uses CIC-IDS2017 and UNSW-NB15 traffic, normalised header and flow features, and a time-based 70/15/15 training, validation and test split. It also describes a zero-day simulation that withheld attacks from the final 20% of the time span. The relationship between that holdout and the 70/15/15 split is not fully specified in the manuscript.
 
-```python
-import numpy as np
-import tensorflow as tf
+A Linux DPDK replay system drove traffic into the switch. The simulated scenarios included ARP spoofing, Nmap port scans, Hydra SSH brute force and a custom DNS tunnel. Payload and timing variations were used to exercise polymorphic behaviour. The baselines were Snort 2.9.19, Suricata 6.0.8 and the same DNN without a rule prefilter, running on the same hardware.
 
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
+This is a benchmark and replay evaluation. Withheld attack classes and synthetic variants are useful tests of generalisation, but they do not establish that the system detects arbitrary future exploits in production.
 
-def representative_data():
-    # A few hundred real feature vectors, so the converter can pick value ranges.
-    for row in calibration_features[:500]:
-        yield [row.astype(np.float32)[None, :]]
+## Detection results: keep the metrics separate
 
-converter.representative_dataset = representative_data
-converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-converter.inference_input_type = tf.int8
-converter.inference_output_type = tf.int8
+Table I reports the following binary benign-versus-attack results:
 
-open("detector_int8.tflite", "wb").write(converter.convert())
-```
+| System                  | Accuracy | Precision | Recall | F1    |
+| ----------------------- | -------- | --------- | ------ | ----- |
+| Snort                   | 84.7%    | 0.823     | 0.731  | 0.774 |
+| Suricata                | 85.9%    | 0.841     | 0.748  | 0.792 |
+| DNN without rule filter | 91.3%    | 0.897     | 0.892  | 0.894 |
+| HERMES                  | 94.7%    | 0.932     | 0.921  | 0.926 |
 
-The calibration data matters more than people expect. If the representative sample does not look like production traffic, the chosen ranges are wrong and accuracy drops in ways the float model never showed. Always re-run your evaluation on the quantised model, never on the original.
+Here, **94.7% is reported accuracy**, not an interchangeable name for recall or detection rate. Section VIII.B separately reports detecting 94.7% of held-out attack flows in its zero-day experiment. The coincidence of those numbers does not make the experiments or metrics identical.
 
-## Reading the numbers like a reviewer
+Calculated from Table I, HERMES is 8.8 percentage points above Suricata and 3.4 percentage points above the DNN-only baseline in accuracy. The manuscript's prose calls the Suricata difference a 12.3% absolute improvement, which the table does not support. Figure 5 reports ROC AUC of approximately 0.99; without the underlying score arrays, it cannot be independently recalculated here.
 
-A single accuracy figure says very little about an intrusion detector. Here is what each number does and does not tell you.
+### The confusion matrix needs reconciliation
 
-**Accuracy (94.7%).** Network traffic is mostly benign. A detector that labels everything benign can score very high accuracy on a dataset that is mostly benign. That is why the paper also reports F1, ROC AUC and a false positive rate. Read accuracy last.
+Table III is labelled as the CIC-IDS2017 test confusion matrix:
 
-**False positive rate (0.9%).** This looks small and may not be. A rate is only meaningful alongside its unit. If the unit were a single packet and every packet at 15,000 per second were scored independently, 0.9% would be 135 false alerts a second, which no operator could use. Deployed detectors usually score flows or time windows rather than packets, and both datasets above are distributed as labelled flow-level records as well as raw captures, so the number may mean something far more manageable. The point is not that the figure is wrong. It is that you cannot judge it without knowing what a "decision" is, and every IDS result should state that.
+| Actual class | Predicted benign | Predicted attack |
+| ------------ | ---------------- | ---------------- |
+| Benign       | 42,847           | 392              |
+| Attack       | 1,203            | 38,921           |
 
-**Latency (2.4 ms average).** An average hides the tail. For inline detection the question is what the 99th percentile looks like when the link is busy, because a slow decision is a dropped or delayed packet.
+Using the displayed counts, the false-positive rate is `392 / (42,847 + 392)`, or approximately **0.91%**. The surrounding manuscript prose says 0.8%, while the published Springer abstract says 0.9%.
 
-**Throughput (15,000 packets per second).** Ask whether that was sustained or a peak, and whether detection quality was measured at that load or separately.
+The same matrix yields about 98.09% accuracy, 0.990 precision, 0.970 recall and 0.980 F1. These do not reproduce Table I's HERMES row. The matrix may represent a different subset or aggregation, but the manuscript does not provide enough detail to establish that relationship. Table I values remain reported summary results; the matrix-derived values are arithmetic on Table III, not replacement benchmark results.
 
-**Power (4.2 W per node).** Ask whether it is measured under load or idle, and what was included. With two nodes the cluster total is about 8.4 W if both draw that. The "67% less than typical x86 solutions" claim implies a comparison figure of around 12.7 W (4.2 divided by 0.33), which is plain arithmetic on the reported percentage. The paper says what it was compared against.
+This matters operationally. A false-positive rate applies to a defined set of benign decisions. It cannot be multiplied directly by the packet-throughput figure to obtain alerts per second when the evaluation unit and alert aggregation differ.
 
-## The hard part is generalisation
+## Resource costs: compare like with like
 
-The abstract mentions synthetic zero-day variants. That phrase deserves attention in any IDS paper. A variant produced by modifying a known attack tests whether the system tolerates variation. It does not tell you how the system behaves against an attack nobody has seen, which tends to differ in ways the test author did not think of.
+Table II reports the following mixed-traffic resource measurements:
 
-Honest generalisation testing is mostly about the split. Hold out entire attack families, not random rows. Split by time. Train on one dataset and test on another. A model that has seen near-duplicates of the test rows will look excellent and then disappoint in deployment. The paper also analyses adversarial resilience, and that is the other half of the same question: an attacker who knows there is a model can shape traffic to it.
+| System                  | CPU utilisation | RAM      | Latency | Power per node | Throughput |
+| ----------------------- | --------------- | -------- | ------- | -------------- | ---------- |
+| Snort                   | 23.4%           | 512 MB   | 1.2 ms  | 3.8 W          | 9,500 pps  |
+| Suricata                | 31.7%           | 768 MB   | 1.8 ms  | 4.6 W          | 11,200 pps |
+| DNN without rule filter | 45.2%           | 1,024 MB | 3.1 ms  | 5.4 W          | 12,800 pps |
+| HERMES                  | 28.9%           | 640 MB   | 2.4 ms  | 4.2 W          | 15,000 pps |
 
-## Questions to ask of any edge-security benchmark
+HERMES uses about **22.2% less power than the DNN-only baseline** in that table. It uses about 10.5% more power than Snort. Its latency is higher than the rule-only baselines and about **22.6% lower than DNN-only** using the table's 3.1 ms comparator. The paper's 33% latency reduction comes from a separate load comparison in the Figure 3 discussion: approximately 2.8 ms versus 4.2 ms at 15,000 pps. These operating points should not be combined.
 
-- What is the unit of a decision: packet, flow, window?
-- How was the data split, and could the test set contain near-duplicates of the training set?
-- What is the class balance, and does the metric survive it?
-- What does the false positive rate mean in alerts per hour at realistic load?
-- Is latency reported as an average or as a tail?
-- Was power measured under load, and what hardware was it compared with?
-- How was the model evaluated after quantisation?
-- What did the zero-day claim actually test?
+The abstract's claim of 67% less power than typical x86 solutions is not substantiated by an x86 comparison row in the supplied manuscript. The concrete comparison above is between systems on the ARM testbed. Two nodes drawing 4.2 W each imply about 8.4 W for the boards together; that arithmetic is not a measured whole-system total including the switch and replay host.
 
-Hold your own work to these before you hold anyone else's. A system that survives them is worth deploying.
+The methodology increases traffic until packet loss rises above 0.1%. The results report approximately 15,000 pps and growing queueing delay beyond the operating range; the discussion notes increased latency above 18,000 pps. Although the methods mention tail latency, the supplied results do not give a numerical p95 or p99 value.
+
+## Robustness and the limits of the evidence
+
+Section VIII.A reports FGSM and PGD feature-space attacks with perturbation budgets up to epsilon 0.1. Reported accuracy is about 89.3% for HERMES and 67.2% for DNN-only under that experiment. This tests the stated adversarial setup; it is not a guarantee against every protocol-valid evasion strategy.
+
+The paper identifies model staleness, inter-node communication overhead, complex blended attacks and additional real-world encrypted traffic as areas requiring more work. It reports roughly 3% communication overhead. It also discusses differential privacy in the privacy section while describing federated learning as future work; the supplied manuscript does not give a privacy budget or a reproducible accounting procedure, so this article makes no quantified privacy guarantee.
+
+The data-availability statement says code and configuration will be available on reasonable request after publication. The supplied manuscript does not include the raw evaluation logs, exact split manifests or model binaries needed to resolve the reporting discrepancies or rerun the benchmark.
+
+## What to take from HERMES
+
+The prototype shows a concrete way to put a cheap decision stage in front of learned inference on constrained ARM hardware. Table II makes the trade-off visible: more detection capacity than the rule-only baselines, with a higher cost than Snort and a lower cost than the DNN-only system in the reported workload.
+
+Before using the figures for a deployment decision, reconcile the summary table with the confusion matrix, identify the exact evaluation unit and splits, measure alert volume at the intended traffic mix, and inspect tail latency under load. Those checks turn an interesting published result into evidence for a specific installation.
+
+_Revision note: this version adds the manuscript's implementation and evaluation details, distinguishes accuracy from held-out-attack detection, and flags discrepancies between tables, prose and the published abstract. No experiment was rerun and no missing result was invented._

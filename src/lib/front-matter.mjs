@@ -33,6 +33,8 @@ export function readPosts(directory = "./src/content/blog") {
       slug: file.replace(/\.mdx?$/, ""),
       title: field("title") ?? file,
       description: field("description") ?? "",
+      cover: field("cover"),
+      canonical: field("canonical"),
       publishedAt: new Date(field("publishedAt") ?? ""),
       updatedAt: field("updatedAt") ? new Date(field("updatedAt")) : undefined,
       draft: field("draft") === "true",

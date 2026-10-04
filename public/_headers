@@ -26,3 +26,6 @@
 /speculation.json
   Content-Type: application/speculationrules+json
   Cache-Control: public, max-age=3600
+
+/covers/*
+  Cache-Control: public, max-age=31536000, immutable

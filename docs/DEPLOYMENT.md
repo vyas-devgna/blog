@@ -31,7 +31,7 @@ pnpm build
 pnpm deploy
 ```
 
-`pnpm deploy` rebuilds and publishes the Worker and static assets. CI currently validates pull requests and pushes to `main`; production deployment is manual. The last setup build was deployed on 2026-10-04. It is not a formal V1 release.
+`pnpm deploy` rebuilds, validates publication metadata and assets, publishes the Worker and static assets, then notifies IndexNow-compatible engines. A notification failure is a separate error after a successful deployment; inspect the output before retrying a deploy. CI currently validates pull requests and pushes to `main`; production deployment is manual. The last setup build was deployed on 2026-10-04. It is not a formal V1 release.
 
 ## Signup recovery configuration
 
