@@ -12,3 +12,12 @@ try {
 } catch {
   // Theme storage is optional; system preferences remain available.
 }
+
+// Header auth hint: the real session check is async, so remember the last known state and paint the
+// header correctly on the very first frame (account-nav.ts confirms or corrects it a moment later).
+try {
+  const hint = JSON.parse(localStorage.getItem("vyas-auth") || "null");
+  if (hint) document.documentElement.dataset.auth = hint.in ? "in" : "out";
+} catch {
+  // Without storage the header simply settles after the session check.
+}

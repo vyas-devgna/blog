@@ -6,7 +6,7 @@ const csp = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'sha256-p7RzDCNrDiI+XUT3Q2/EzOOsyVKKkGzLn8CxfVxabr0=' https://challenges.cloudflare.com https://static.cloudflareinsights.com/beacon.min.js https://static.cloudflareinsights.com/beacon.min.js/",
+  "script-src 'self' 'sha256-WCM6AayeB4Jz3IDBKdWNoECwGrP3shbdvHxSoiF6WoQ=' https://challenges.cloudflare.com https://static.cloudflareinsights.com/beacon.min.js https://static.cloudflareinsights.com/beacon.min.js/",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "img-src 'self' data: https:",
