@@ -1,4 +1,4 @@
-export {};
+import { readClientSession } from "../lib/client-session";
 
 const AUTH_HINT = "vyas-auth";
 const initialsOf = (name: string) =>
@@ -45,19 +45,13 @@ if (cached?.in) {
 
 async function refreshAccountNav() {
   try {
-    const response = await fetch(
-      "/api/auth/get-session?disableCookieCache=true",
-      {
-        credentials: "same-origin",
-        cache: "no-store",
-      },
-    );
-    if (!response.ok) return;
-    const session = await response.json();
+    const session = await readClientSession();
     const signedIn = Boolean(session?.user);
     setAuthState(signedIn ? "in" : "out");
     writeHint(
-      signedIn ? { in: true, name: session.user.name || "Your account" } : null,
+      signedIn
+        ? { in: true, name: session?.user?.name || "Your account" }
+        : null,
     );
     for (const link of document.querySelectorAll<HTMLElement>(
       "[data-anonymous-nav]",
@@ -76,12 +70,12 @@ async function refreshAccountNav() {
     }
     const name = document.querySelector<HTMLElement>("[data-account-name]");
     if (name && signedIn)
-      name.textContent = session.user.name || "Your account";
+      name.textContent = session?.user?.name || "Your account";
     const initials = document.querySelector<HTMLElement>(
       "[data-account-initials]",
     );
     if (initials && signedIn)
-      initials.textContent = String(session.user.name || "Vyas")
+      initials.textContent = String(session?.user?.name || "Vyas")
         .trim()
         .split(/\s+/)
         .slice(0, 2)

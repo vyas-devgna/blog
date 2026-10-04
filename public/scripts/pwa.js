@@ -15,7 +15,7 @@
   const secure =
     location.protocol === "https:" || location.hostname === "localhost";
   if ("serviceWorker" in navigator && secure) {
-    addEventListener("load", async () => {
+    const register = async () => {
       try {
         const reg = await navigator.serviceWorker.register("/sw.js");
         reg.addEventListener("updatefound", () => {
@@ -31,7 +31,14 @@
       } catch {
         /* offline reading is a bonus */
       }
-    });
+    };
+    const schedule = () => {
+      if ("requestIdleCallback" in window)
+        requestIdleCallback(register, { timeout: 10_000 });
+      else setTimeout(register, 1500);
+    };
+    if (document.readyState === "complete") schedule();
+    else addEventListener("load", schedule, { once: true });
   }
 
   // Footer install control — created here so it needs no markup change; hidden until installable.

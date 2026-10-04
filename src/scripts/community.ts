@@ -1,5 +1,6 @@
 import { actionDialog } from "../lib/dialog";
 import { requestJson } from "../lib/client-api";
+import { readClientSession } from "../lib/client-session";
 export {};
 
 type CommunityProfile = {
@@ -103,7 +104,9 @@ let turnstileScript: Promise<void> | null = null;
 async function loadCommunityContext() {
   const [config, profile] = await Promise.all([
     api("/api/community/config").catch(() => ({}) as Result),
-    api("/api/community/profile").catch(() => null),
+    readClientSession()
+      .then((session) => (session?.user ? api("/api/community/profile") : null))
+      .catch(() => null),
   ]);
   turnstileConfig = config as { turnstileSiteKey?: string | null };
   if (profile) currentProfile = profile as unknown as CommunityProfile;
