@@ -48,3 +48,10 @@ Google's guidance: [AI features and your website](https://developers.google.com/
 - The only new on-page change for this query is a single natural first-screen mention of the established name variant on each homepage. No keyword-variant pages, artificial backlinks, fabricated identity details, or extra AI text files were added.
 
 Sources: [Google AI optimization guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), [Search generative AI control](https://support.google.com/webmasters/answer/16908024), [Generative AI performance report](https://support.google.com/webmasters/answer/16984139), [title links](https://developers.google.com/search/docs/appearance/title-link), and [site names](https://developers.google.com/search/docs/appearance/site-names).
+
+## Release — 5 October 2026
+
+- The single first-screen alias mention shipped on both homepages: portfolio commit `2d3720a`; blog commit `84ca3c0`. Production HTML on both sites was fetched and contained the new wording.
+- The portfolio quality check and GitHub Pages deployment both succeeded for `2d3720a`. The blog typecheck, formatting, production build, CSP and publication checks succeeded. Wrangler reported a transient custom-domain trigger fetch warning, but Cloudflare's deployment list showed version `3fb66e6d-f4bf-4a5f-837a-3dcdd00f459e` serving 100%, and the updated page returned HTTP 200 with the alias visible.
+- IndexNow accepted 10 blog URLs with HTTP 200. IndexNow is not a Google indexing or ranking confirmation.
+- Google Search results, Search Console's GAIR inclusion setting, AI impression report and new crawl status were unavailable for direct verification in this run.
