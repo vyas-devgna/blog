@@ -13,7 +13,7 @@ export const GET: APIRoute = async () => {
   const lines = [
     "# Vyas — notes on software, systems and research",
     "",
-    "> Independent technical writing by Devgna Vyas: AI-agent security, local-first software, networking, and the engineering behind open-source projects. Articles are static pages, free to read, and cite their sources.",
+    "> Independent technical writing by Vyas Devgna, also known as Devgna Vyas: AI-agent security, local-first software, networking, and the engineering behind open-source projects. Articles are static pages, free to read, and cite their sources.",
     "",
     "## Articles",
     ...posts.map(

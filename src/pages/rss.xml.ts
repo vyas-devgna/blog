@@ -8,7 +8,7 @@ export const GET: APIRoute = async ({ site }) => {
   const posts = await getPublishedPosts();
   return rss({
     title: BLOG_NAME,
-    description: "Essays on software, research, and systems by Devgna Vyas.",
+    description: "Essays on software, research, and systems by Vyas Devgna.",
     site: site!,
     items: posts.map((post) => ({
       title: post.data.title,

@@ -5,10 +5,10 @@ export const PERSON_ID = "https://vyasdevgna.online/#person";
 export const author = {
   "@type": "Person",
   "@id": PERSON_ID,
-  name: "Devgna Vyas",
+  name: "Vyas Devgna",
   givenName: "Devgna",
   familyName: "Vyas",
-  alternateName: ["Vyas Devgna", "vyasdevgna"],
+  alternateName: ["Devgna Vyas", "vyasdevgna"],
   url: "https://vyasdevgna.online/",
   image: "https://vyasdevgna.online/images/portrait.webp",
   jobTitle: "Systems Engineer",

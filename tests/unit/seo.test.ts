@@ -10,8 +10,8 @@ import {
 
 it("identifies the same author across the portfolio and publication", () => {
   expect(author["@id"]).toBe(PERSON_ID);
-  expect(author.name).toBe("Devgna Vyas");
-  expect(author.alternateName).toContain("Vyas Devgna");
+  expect(author.name).toBe("Vyas Devgna");
+  expect(author.alternateName).toContain("Devgna Vyas");
   expect(author.sameAs).toContain("https://blog.vyasdevgna.online/about/");
 });
 
