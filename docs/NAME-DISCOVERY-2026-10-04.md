@@ -30,3 +30,11 @@ Rank #1 for the portfolio, rank #2 for the blog, and inclusion as an AI Overview
 The GitHub profile already links the portfolio in its README, but its dedicated website field is blank. An attempted update was rejected because the existing CLI credential lacks the user-profile scope; the browser is signed out. No new permissions or credentials were created.
 
 Google's guidance: [AI features and your website](https://developers.google.com/search/docs/appearance/ai-features). Indexed pages eligible for snippets can be considered for AI features; no special AI files or additional schema are required, and serving is not guaranteed.
+
+## Follow-up — 5 October 2026
+
+- Added the public portfolio and blog URLs to their respective GitHub repository homepage fields, which were previously empty. Verified the saved values through GitHub's API.
+- Published a short identity paragraph in the existing public GitHub profile README linking both websites and explaining the Devgna Vyas / Vyas Devgna name order. Existing content was preserved. Commit: `77a633eb2f565d20f6bb735b53cd008373719fc5` in `vyas-devgna/vyas-devgna`.
+- Retrieved production HTML from the portfolio and blog author page: both still expose the same Person ID and name variants, with no noindex or snippet restrictions detected in that HTML.
+- These links make the websites easier to find from public GitHub pages. Their effect on Google ranking and AI citations has not been measured or established.
+- Browser control is unavailable in this turn. Today's Search Console processing status, current Google positions, and changed AI Overview citations were not verified. Yesterday's accepted recrawl requests should not be reported as new indexing successes.
