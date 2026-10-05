@@ -61,3 +61,14 @@ Sources: [Google AI optimization guide](https://developers.google.com/search/doc
 - Updated both homepage sitemap `lastmod` values after the visible name clarification shipped. The blog build now advances its homepage date when newer article updates change its homepage cards; the portfolio's static sitemap date matches its homepage revision.
 - Google's guidance says `lastmod` should report verifiable significant page changes and is only a crawl hint. No ranking or indexing outcome is implied by this metadata update.
 - Search Console controls and performance remain unverified because this session has no browser-control or Search Console API capability.
+
+## Follow-up — 6 October 2026
+
+- Google's current AI search guidance says eligible, indexed pages can appear in AI features using ordinary SEO fundamentals; Google understands synonyms, does not require AI-specific formatting/schema, and warns against pages or mentions made mainly to manipulate rankings. The existing portfolio and blog already share one Person entity with the `Vyas Devgna` alternate name, visible biographies, profile pages, and cross-links, so no keyword-variant pages or extra schema were added.
+- Left the homepage titles unchanged: both name forms are already present in visible identity copy and structured data. Google's title guidance favors concise, descriptive titles and warns that repeated keyword phrases can look spammy.
+- Corrected the portfolio's HERMES `ScholarlyArticle.datePublished`: `icSoftComp 2025` is the conference year, while Crossref's DOI record says the Springer chapter was published online on 11 April 2026. Added the DOI URL to the structured article and made the visible publication label distinguish both years.
+- Added that same publication-date distinction to the HERMES article and advanced its `updatedAt`; the article sitemap and homepage `lastmod` now reflect the correction. The card still shows the original article publication date.
+- Both live homepages remain crawlable/indexable with HTTP 200 and canonical URLs. Mobile Lighthouse was 94/100 performance and 100/100 SEO on both sites; the provided-network runs had 0 ms TBT and 0 CLS. The current measurements did not identify a material change worth risking for a small lab-score gain.
+- Search Console's current query report, post-edit URL inspection, AI inclusion setting, and AI performance report could not be accessed from this task's available tools. Rankings and AI citations are therefore still unverified.
+
+Sources: [Google AI search guidance](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), [Google title-link guidance](https://developers.google.com/search/docs/appearance/title-link), [Google crawling/indexing FAQ](https://developers.google.com/search/help/crawling-index-faq), and [Crossref DOI record](https://crossmark.crossref.org/dialog/?doi=10.1007%2F978-3-032-22062-2_24).
