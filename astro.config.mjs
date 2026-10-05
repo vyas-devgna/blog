@@ -7,6 +7,8 @@ import { postLastModified } from "./src/lib/sitemap-dates.mjs";
 import { defineConfig } from "astro/config";
 
 const lastModified = postLastModified();
+// About page identity copy changed in the 2026-10-05 publication update.
+lastModified.set("/about/", "2026-10-05T20:31:34Z");
 // Homepage identity copy changed on 2026-10-05; later article changes also update its cards.
 lastModified.set(
   "/",
