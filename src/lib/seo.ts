@@ -1,5 +1,5 @@
 export const BLOG_URL = "https://blog.vyasdevgna.online";
-export const BLOG_NAME = "Devgna Vyas Blog";
+export const BLOG_NAME = "Vyas Devgna Blog";
 export const PERSON_ID = "https://vyasdevgna.online/#person";
 
 export const author = {

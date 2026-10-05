@@ -34,7 +34,7 @@ const {
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
 const siteStructuredData = { '@context': 'https://schema.org', '@graph': [author, {
-  '@type': 'WebSite', '@id': BLOG_URL + '/#website', url: BLOG_URL + '/', name: BLOG_NAME, alternateName: ['Vyas', 'Vyas Devgna Blog'], inLanguage: 'en', publisher: { '@id': author['@id'] },
+  '@type': 'WebSite', '@id': BLOG_URL + '/#website', url: BLOG_URL + '/', name: BLOG_NAME, alternateName: ['Vyas', 'Devgna Vyas Blog'], inLanguage: 'en', publisher: { '@id': author['@id'] },
 }] };
 const currentPath = Astro.url.pathname;
 const activePage = (href: string) => currentPath.startsWith(href) ? 'page' as const : undefined;
