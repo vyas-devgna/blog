@@ -55,3 +55,9 @@ Sources: [Google AI optimization guide](https://developers.google.com/search/doc
 - The portfolio quality check and GitHub Pages deployment both succeeded for `2d3720a`. The blog typecheck, formatting, production build, CSP and publication checks succeeded. Wrangler reported a transient custom-domain trigger fetch warning, but Cloudflare's deployment list showed version `3fb66e6d-f4bf-4a5f-837a-3dcdd00f459e` serving 100%, and the updated page returned HTTP 200 with the alias visible.
 - IndexNow accepted 10 blog URLs with HTTP 200. IndexNow is not a Google indexing or ranking confirmation.
 - Google Search results, Search Console's GAIR inclusion setting, AI impression report and new crawl status were unavailable for direct verification in this run.
+
+## Follow-up — 5 October 2026
+
+- Updated both homepage sitemap `lastmod` values after the visible name clarification shipped. The blog build now advances its homepage date when newer article updates change its homepage cards; the portfolio's static sitemap date matches its homepage revision.
+- Google's guidance says `lastmod` should report verifiable significant page changes and is only a crawl hint. No ranking or indexing outcome is implied by this metadata update.
+- Search Console controls and performance remain unverified because this session has no browser-control or Search Console API capability.
