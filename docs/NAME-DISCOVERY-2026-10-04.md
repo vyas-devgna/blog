@@ -72,3 +72,9 @@ Sources: [Google AI optimization guide](https://developers.google.com/search/doc
 - Search Console's current query report, post-edit URL inspection, AI inclusion setting, and AI performance report could not be accessed from this task's available tools. Rankings and AI citations are therefore still unverified.
 
 Sources: [Google AI search guidance](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), [Google title-link guidance](https://developers.google.com/search/docs/appearance/title-link), [Google crawling/indexing FAQ](https://developers.google.com/search/help/crawling-index-faq), and [Crossref DOI record](https://crossmark.crossref.org/dialog/?doi=10.1007%2F978-3-032-22062-2_24).
+
+## Release — 6 October 2026
+
+- Portfolio commit `460a80c` passed its quality workflow and GitHub Pages deployment. A Googlebot user-agent fetch returned HTTP 200; live JSON-LD has the verified 2026-04-11 date and DOI URL, and the sitemap has `lastmod` 2026-10-06.
+- Blog commit `0428dbb` passed CI and deployed to Cloudflare as version `a320853a-ae10-4d8d-886b-521ababaa6fd`. The live article contains the conference/publication date distinction and its sitemap reports `lastmod` 2026-10-06. IndexNow accepted 10 URLs with HTTP 200.
+- These deployments correct metadata and publication facts; they do not verify Google recrawling, query positions, or AI citations. Search Console access is still required to check those outcomes.
