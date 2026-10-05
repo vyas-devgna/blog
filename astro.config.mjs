@@ -8,7 +8,10 @@ import { defineConfig } from "astro/config";
 
 const lastModified = postLastModified();
 // Homepage identity copy changed on 2026-10-05; later article changes also update its cards.
-lastModified.set("/", [...lastModified.values(), "2026-10-05"].sort().at(-1) ?? "2026-10-05");
+lastModified.set(
+  "/",
+  [...lastModified.values(), "2026-10-05"].sort().at(-1) ?? "2026-10-05",
+);
 
 export default defineConfig({
   site: "https://blog.vyasdevgna.online",
